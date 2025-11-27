@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import com.ShopSphere.shop_sphere.dto.CartDto;
 import com.ShopSphere.shop_sphere.dto.CartItemDto;
 import com.ShopSphere.shop_sphere.model.Cart;
-import com.ShopSphere.shop_sphere.response.ApiResponse;
 import com.ShopSphere.shop_sphere.service.CartService;
 
 @RestController
@@ -22,6 +21,19 @@ public class CartController {
         this.cartService = cartService;
     }
 
+    // ---------------- Helper Mapping Methods ----------------
+
+//    private Cart dtoToEntity(CartDto cartDto) {
+//        Cart cart = new Cart();
+//        cart.setCartId(cartDto.getCartId());
+//        cart.setUserId(cartDto.getUserId());
+//        return cart;
+//    }
+    
+//    Using dtoToEntity() in CartController adds dead code, potential security 
+//    issues, and no actual benefit. It’s safer, cleaner, and more maintainable to omit 
+//    it entirely in this context.
+
     private CartDto entityToDto(Cart cart) {
         CartDto cartDto = new CartDto();
         cartDto.setCartId(cart.getCartId());
@@ -29,108 +41,80 @@ public class CartController {
         return cartDto;
     }
 
+    // ---------------------- API Endpoints ------------------------
 
+    // Create Cart for User
     @PostMapping("/{userId}")
-    public ResponseEntity<ApiResponse> createCart(@PathVariable int userId) {
+    public ResponseEntity<CartDto> createCart(@PathVariable int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
 
         Cart cart = cartService.createCart(userId);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Cart created successfully", entityToDto(cart))
-        );
+        return ResponseEntity.ok(entityToDto(cart));
     }
 
-
+    // Get Cart by UserID
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse> getCartByUserId(@PathVariable int userId) {
+    public ResponseEntity<CartDto> getCartByUserId(@PathVariable int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
 
         Cart cart = cartService.getCartByUserId(userId);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Cart fetched successfully", entityToDto(cart))
-        );
+        return ResponseEntity.ok(entityToDto(cart));
     }
 
-
+    // Get Cart by CartID
     @GetMapping("/{cartId}")
-    public ResponseEntity<ApiResponse> getCartById(@PathVariable int cartId) {
+    public ResponseEntity<CartDto> getCartById(@PathVariable int cartId) {
+        if (cartId <= 0) {
+            throw new IllegalArgumentException("Invalid cart ID");
+        }
 
         Cart cart = cartService.getCartById(cartId);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Cart fetched successfully", entityToDto(cart))
-        );
+        return ResponseEntity.ok(entityToDto(cart));
     }
 
-
+    // Get All Carts
     @GetMapping
-    public ResponseEntity<ApiResponse> getAllCarts() {
-
+    public ResponseEntity<List<CartDto>> getAllCarts() {
         List<CartDto> carts = cartService.getAllCarts()
-                                         .stream()
-                                         .map(this::entityToDto)
-                                         .collect(Collectors.toList());
+                .stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
 
-        return ResponseEntity.ok(
-                ApiResponse.success("Carts fetched successfully", carts)
-        );
+        return ResponseEntity.ok(carts);
     }
 
-
+    // Delete Cart
     @DeleteMapping("/{cartId}")
-    public ResponseEntity<ApiResponse> deleteCart(@PathVariable int cartId) {
+    public ResponseEntity<String> deleteCart(@PathVariable int cartId) {
+        if (cartId <= 0) {
+            throw new IllegalArgumentException("Invalid cart ID");
+        }
 
         cartService.deleteCart(cartId);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Cart deleted successfully")
-        );
+        return ResponseEntity.ok("Cart deleted successfully");
     }
 
-
+    // Check if Cart exists for User
     @GetMapping("/exists/{userId}")
-    public ResponseEntity<ApiResponse> cartExistsForUser(@PathVariable int userId) {
+    public ResponseEntity<Boolean> cartExistsForUser(@PathVariable int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
 
-        boolean exists = cartService.cartExistsForUser(userId);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Cart existence checked", exists)
-        );
+        return ResponseEntity.ok(cartService.cartExistsForUser(userId));
     }
 
-
-
+    // Get Cart Items for a User
     @GetMapping("/userCart/{userId}")
-    public ResponseEntity<ApiResponse> getCartItems(@PathVariable int userId) {
+    public ResponseEntity<List<CartItemDto>> getCartItems(@PathVariable int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
 
-        List<CartItemDto> items = cartService.getCartItemsByUserId(userId);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Cart items fetched successfully", items)
-        );
+        return ResponseEntity.ok(cartService.getCartItemsByUserId(userId));
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

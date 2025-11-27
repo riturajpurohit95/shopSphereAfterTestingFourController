@@ -6,70 +6,89 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.ShopSphere.shop_sphere.exception.ResourceNotFoundException;
+import com.ShopSphere.shop_sphere.exception.ValidationException;
 import com.ShopSphere.shop_sphere.model.CartItem;
 import com.ShopSphere.shop_sphere.repository.CartItemDao;
 
 @Service
-public class CartItemServiceImpl implements CartItemService{
-	
-	private final CartItemDao cartItemDao;
-	
-	public CartItemServiceImpl(CartItemDao cartItemDao) {
-		this.cartItemDao = cartItemDao;
-	}
+public class CartItemServiceImpl implements CartItemService {
 
-	@Override
-	public CartItem addItem(CartItem cartItem) {
-		return cartItemDao.addItem(cartItem);
-	}
+    private final CartItemDao cartItemDao;
 
-	@Override
-	public Optional<CartItem> findItemByCartId(int cartId) {
-		return cartItemDao.findByCartId(cartId);
-	}
+    public CartItemServiceImpl(CartItemDao cartItemDao) {
+        this.cartItemDao = cartItemDao;
+    }
 
-	@Override
-	public List<CartItem> getItemsByCartId(int cartId) {
-		return cartItemDao.findAllByCartId(cartId);
-	}
+    @Override
+    public CartItem addItem(CartItem item) {
 
-	@Override
-	public CartItem updateItemQuantity(int cartItemId, int quantity) {
-		int rows = cartItemDao.updateItemQuantity(cartItemId, quantity);
-		if(rows<=0) {
-			throw new ResourceNotFoundException("CatItem update failed or item not found with id: "+cartItemId);
-		}
-		return cartItemDao.findByCartId(cartItemId)
-										.orElseThrow(() -> new ResourceNotFoundException("CartItem not found"))
-			;
-	}
+        if (item.getQuantity() <= 0) {
+            throw new ValidationException("Quantity must be greater than 0");
+        }
 
-	@Override
-	public void deleteItem(int cartItemId) {
-		int rows = cartItemDao.deleteItem(cartItemId);
-		if (rows <= 0) {
-			throw new ResourceNotFoundException("CartItem not found with id: "+cartItemId);
-		}
-	}
+        // IF ITEM EXISTS → UPDATE QUANTITY
+        if (cartItemDao.existsInCart(item.getCartId(), item.getProductId())) {
 
-	@Override
-	public void deleteItemByProductId(int cartId, int productId) {
-		int rows = cartItemDao.deleteItemByProductId(cartId, productId);
-		if(rows<=0) {
-			throw new ResourceNotFoundException("No cart item found for productId: "+productId);
-		}
-	}
+            CartItem existing = cartItemDao.findByProductAndCart(item.getCartId(), item.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Existing cart item not found"));
 
-	@Override
-	public double calculateTotalAmount(int cartId) {
-		return cartItemDao.calculateTotalAmount(cartId);
-	}
+            int newQty = existing.getQuantity() + item.getQuantity();
+            cartItemDao.updateItemQuantity(existing.getCartItemsId(), newQty);
 
-	@Override
-	public boolean existsInCart(int cartId, int productId) {
-		return cartItemDao.existsInCart(cartId, productId);
-	}
-	
-	
+            return cartItemDao.findByProductAndCart(item.getCartId(), item.getProductId()).get();
+        }
 
+        // ELSE → ADD NEW ITEM
+        return cartItemDao.addItem(item);
+    }
+
+    @Override
+    public Optional<CartItem> findItemByCartId(int cartId) {
+        return cartItemDao.findByCartId(cartId);
+    }
+
+    @Override
+    public List<CartItem> getItemsByCartId(int cartId) {
+        return cartItemDao.findAllByCartId(cartId);
+    }
+
+    @Override
+    public CartItem updateItemQuantity(int cartItemId, int quantity) {
+        int updated = cartItemDao.updateItemQuantity(cartItemId, quantity);
+
+        if (updated <= 0) {
+            throw new ResourceNotFoundException("Cart item not found with id: " + cartItemId);
+        }
+
+        return cartItemDao.findByCartId(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+    }
+
+    @Override
+    public void deleteItem(int cartItemId) {
+        int rows = cartItemDao.deleteItem(cartItemId);
+
+        if (rows <= 0) {
+            throw new ResourceNotFoundException("Cart item not found with id: " + cartItemId);
+        }
+    }
+
+    @Override
+    public void deleteItemByProductId(int cartId, int productId) {
+        int rows = cartItemDao.deleteItemByProductId(cartId, productId);
+
+        if (rows <= 0) {
+            throw new ResourceNotFoundException("No cart item found for product: " + productId);
+        }
+    }
+
+    @Override
+    public double calculateTotalAmount(int cartId) {
+        return cartItemDao.calculateTotalAmount(cartId);
+    }
+
+    @Override
+    public boolean existsInCart(int cartId, int productId) {
+        return cartItemDao.existsInCart(cartId, productId);
+    }
 }

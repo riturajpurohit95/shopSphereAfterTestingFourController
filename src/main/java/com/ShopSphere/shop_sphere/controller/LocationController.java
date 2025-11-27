@@ -3,13 +3,8 @@ package com.ShopSphere.shop_sphere.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import com.ShopSphere.shop_sphere.dto.LocationDto;
 import com.ShopSphere.shop_sphere.model.Location;
@@ -18,83 +13,95 @@ import com.ShopSphere.shop_sphere.service.LocationService;
 @RestController
 @RequestMapping("/api/locations")
 public class LocationController {
-	private final LocationService locationService;
-	
-	public LocationController(LocationService locationService) {
-		this.locationService = locationService;
-	}
-	
-	private Location dtoToEntity(LocationDto dto) {
-		Location loc = new Location();
-		//loc.setLocationId(dto.getLocationId());
-		loc.setCity(dto.getCity());
-		loc.setHubValue(dto.getHubValue());
-		return loc;
-	}
-	
-	private LocationDto entityToDto(Location loc) {
-		LocationDto dto = new LocationDto();
-		dto.setLocationId(loc.getLocationId());
-		dto.setCity(loc.getCity());
-		dto.setHubValue(loc.getHubValue());
-		return dto;
-	}
-	
-	@PostMapping
-	public LocationDto creatLocation(@RequestBody LocationDto dto) {
-		Location saved = locationService.createLocation(dtoToEntity(dto));
-		return entityToDto(saved);
-	}
-	
-	@GetMapping("/{locationId}")
-	public LocationDto getLocationbyId(@PathVariable int locationId) {
-		Location loc = locationService.getLocationById(locationId);
-		return entityToDto(loc);
-	}
-	
-	@GetMapping
-	public List<LocationDto> getAllLocations(){
-		return locationService.getAllLocation().stream()
-				.map(this::entityToDto)
-				.collect(Collectors.toList());
+
+    private final LocationService locationService;
+
+    public LocationController(LocationService locationService) {
+        this.locationService = locationService;
+    }
+
+    // ---------------- Helper Methods ----------------
+
+    private Location dtoToEntity(LocationDto dto) {
+        Location loc = new Location();
+        loc.setCity(dto.getCity());
+        loc.setHubValue(dto.getHubValue());
+        return loc;
+    }
+
+    private LocationDto entityToDto(Location loc) {
+        LocationDto dto = new LocationDto();
+        dto.setLocationId(loc.getLocationId());
+        dto.setCity(loc.getCity());
+        dto.setHubValue(loc.getHubValue());
+        return dto;
+    }
+
+    // ---------------- API Endpoints ----------------
+
+    @PostMapping
+    public ResponseEntity<LocationDto> createLocation(@RequestBody LocationDto dto) {
+        if (dto.getCity() == null || dto.getCity().isBlank()) {
+            throw new IllegalArgumentException("City cannot be empty");
+        }
+        if (dto.getHubValue() == null || dto.getHubValue() < 0) {
+            throw new IllegalArgumentException("Hub value must be a positive integer");
+        }
+
+        Location saved = locationService.createLocation(dtoToEntity(dto));
+        return ResponseEntity.ok(entityToDto(saved));
+    }
+
+    @GetMapping("/{locationId}")
+    public ResponseEntity<LocationDto> getLocationById(@PathVariable int locationId) {
+        if (locationId <= 0) {
+            throw new IllegalArgumentException("Invalid location ID");
+        }
+
+        Location loc = locationService.getLocationById(locationId);
+        return ResponseEntity.ok(entityToDto(loc));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<LocationDto>> getAllLocations() {
+        List<LocationDto> list = locationService.getAllLocation().stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/city/{city}")
+    public ResponseEntity<List<LocationDto>> getLocationsByCity(@PathVariable String city) {
+        if (city == null || city.isBlank()) {
+            throw new IllegalArgumentException("City cannot be empty");
+        }
+        List<LocationDto> list = locationService.getLocationsByCity(city).stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/search/{keyword}")
+    public ResponseEntity<List<LocationDto>> searchLocations(@PathVariable String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            throw new IllegalArgumentException("Search keyword cannot be empty");
+        }
+        List<LocationDto> list = locationService.searchLocationByKeyword(keyword).stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/exists/{city}")
+    public ResponseEntity<Boolean> existsByCity(@PathVariable String city) {
+        if (city == null || city.isBlank()) {
+            throw new IllegalArgumentException("City cannot be empty");
+        }
+        return ResponseEntity.ok(locationService.existsBycity(city));
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Integer> countLocations() {
+        return ResponseEntity.ok(locationService.countLocations());
+    }
 }
-
-@GetMapping("/city/{city}")
-public List<LocationDto> getAllLocationdsByCity(@PathVariable String city){
-return locationService.getLocationsByCity(city)
-				.stream()
-				.map(this::entityToDto)
-				.collect(Collectors.toList());
-}
-
-@GetMapping("/search/{keyword}")
-public List<LocationDto> searchLocationByKeyword(@PathVariable String keyword){
-return locationService.searchLocationByKeyword(keyword)
-					.stream()
-					.map(this::entityToDto)
-					.collect(Collectors.toList());
-}
-
-
-//@PutMapping("/{locationId}")
-//public LocationDto updateLocation(
-//@PathVariable int locationId,
-//@RequestBody LocationDto dto) {
-//Location updated = locationService.updateLocation(locationId, dtoToEntity(dto));
-//return entityToDto(updated);
-//}
-
-@GetMapping("/exists/{city}")
-public boolean existsByCity(@PathVariable String city) {
-return locationService.existsBycity(city);
-}
-
-@GetMapping("/count")
-public int countLocations() {
-	return locationService.countLocations();
-}
-
-
-
-}
-
