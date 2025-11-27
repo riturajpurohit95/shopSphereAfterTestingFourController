@@ -1,4 +1,3 @@
-
 package com.ShopSphere.shop_sphere.controller;
 
 import java.util.List;
@@ -38,8 +37,7 @@ public class WishlistItemController {
 
     @PostMapping
     public int addItem(@RequestBody WishlistItemDto dto) {
-        WishlistItem wi = dtoToEntity(dto);
-        return wishlistItemService.addItemToWishlist(wi);
+        return wishlistItemService.addItemToWishlist(dtoToEntity(dto));
     }
 
     @GetMapping("/wishlist/{wishlistId}")

@@ -1,4 +1,3 @@
-
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
@@ -6,6 +5,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.ShopSphere.shop_sphere.exception.BadRequestException;
+import com.ShopSphere.shop_sphere.exception.DuplicateResourceException;
 import com.ShopSphere.shop_sphere.exception.ResourceNotFoundException;
 import com.ShopSphere.shop_sphere.model.Wishlist;
 import com.ShopSphere.shop_sphere.repository.WishlistDao;
@@ -21,15 +22,34 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     public Wishlist createWishlist(int userId) {
-        if (wishlistDao.wishlistExistsForUser(userId)) {
-            throw new RuntimeException("Wishlist already exists for userId: " + userId);
+        if (userId <= 0) {
+            throw new BadRequestException("Invalid userId: " + userId);
         }
+
+        if (wishlistDao.wishlistExistsForUser(userId)) {
+            throw new DuplicateResourceException("Wishlist already exists for userId: " + userId);
+        }
+
         int wishlistId = wishlistDao.createWishlist(userId);
-        return wishlistDao.findById(wishlistId);
+
+        if (wishlistId <= 0) {
+            throw new BadRequestException("Failed to create wishlist for userId: " + userId);
+        }
+
+        Wishlist created = wishlistDao.findById(wishlistId);
+        if (created == null) {
+            throw new ResourceNotFoundException("Wishlist created but not found for ID: " + wishlistId);
+        }
+
+        return created;
     }
 
     @Override
     public Wishlist getWishlistByUserId(int userId) {
+        if (userId <= 0) {
+            throw new BadRequestException("Invalid userId: " + userId);
+        }
+
         Wishlist wishlist = wishlistDao.findByUserId(userId);
         if (wishlist == null) {
             throw new ResourceNotFoundException("No wishlist found for userId: " + userId);
@@ -39,6 +59,10 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     public Wishlist getWishlistById(int wishlistId) {
+        if (wishlistId <= 0) {
+            throw new BadRequestException("Invalid wishlistId: " + wishlistId);
+        }
+
         Wishlist wishlist = wishlistDao.findById(wishlistId);
         if (wishlist == null) {
             throw new ResourceNotFoundException("No wishlist found for wishlistId: " + wishlistId);
@@ -48,33 +72,56 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     public List<Wishlist> getAllWishlists() {
-        return wishlistDao.getAllWishlists();
+        List<Wishlist> all = wishlistDao.getAllWishlists();
+        return all == null ? List.of() : all;
     }
 
     @Override
     public void deleteWishlist(int wishlistId) {
-        // ensure it exists
-        Wishlist existing = getWishlistById(wishlistId);
-        int rows = wishlistDao.deleteWishlist(existing.getWishlistId());
+        if (wishlistId <= 0) {
+            throw new BadRequestException("Invalid wishlistId: " + wishlistId);
+        }
+
+        // This already throws ResourceNotFoundException if missing
+        Wishlist w = getWishlistById(wishlistId);
+
+        int rows = wishlistDao.deleteWishlist(w.getWishlistId());
         if (rows <= 0) {
-            throw new RuntimeException("Delete failed for wishlistId: " + wishlistId);
+            throw new BadRequestException("Failed to delete wishlistId: " + wishlistId);
         }
     }
 
     @Override
     public boolean wishlistExistsForUser(int userId) {
+        if (userId <= 0) {
+            throw new BadRequestException("Invalid userId: " + userId);
+        }
         return wishlistDao.wishlistExistsForUser(userId);
     }
 
     @Override
     public boolean isWishlistEmpty(int wishlistId) {
-        Wishlist existing = getWishlistById(wishlistId);
-        return wishlistDao.isWishlistEmpty(existing.getWishlistId());
+        if (wishlistId <= 0) {
+            throw new BadRequestException("Invalid wishlistId: " + wishlistId);
+        }
+
+        Wishlist w = getWishlistById(wishlistId);
+        return wishlistDao.isWishlistEmpty(w.getWishlistId());
     }
     
+
     @Override
     public List<Map<String, Object>> getWishlistItems(int userId) {
-        return wishlistDao.getWishlistItems(userId);
+        if (userId <= 0) {
+            throw new BadRequestException("Invalid userId: " + userId);
+        }
+
+        List<Map<String, Object>> items = wishlistDao.getWishlistItems(userId);
+
+        if (items == null || items.isEmpty()) {
+            throw new ResourceNotFoundException("No wishlist items found for userId: " + userId);
+        }
+
+        return items;
     }
-    
 }

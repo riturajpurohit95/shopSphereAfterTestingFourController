@@ -1,4 +1,3 @@
-
 package com.ShopSphere.shop_sphere.controller;
 
 import java.util.List;
@@ -10,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.ShopSphere.shop_sphere.dto.WishlistDto;
+import com.ShopSphere.shop_sphere.exception.BadRequestException;
+import com.ShopSphere.shop_sphere.exception.DuplicateResourceException;
+import com.ShopSphere.shop_sphere.exception.ResourceNotFoundException;
 import com.ShopSphere.shop_sphere.model.Wishlist;
 import com.ShopSphere.shop_sphere.service.WishlistService;
 
@@ -23,13 +25,6 @@ public class WishlistController {
         this.wishlistService = wishlistService;
     }
 
-    private Wishlist dtoToEntity(WishlistDto dto) {
-        Wishlist w = new Wishlist();
-        w.setWishlistId(dto.getWishlistId());
-        w.setUserId(dto.getUserId());
-        return w;
-    }
-
     private WishlistDto entityToDto(Wishlist w) {
         WishlistDto dto = new WishlistDto();
         dto.setWishlistId(w.getWishlistId());
@@ -37,24 +32,42 @@ public class WishlistController {
         return dto;
     }
 
+    // ---------------- CREATE ----------------
     @PostMapping("/{userId}")
-    public WishlistDto createWishlist(@PathVariable int userId) {
-        Wishlist w = wishlistService.createWishlist(userId);
-        return entityToDto(w);
+    public ResponseEntity<?> createWishlist(@PathVariable int userId) {
+        try {
+            Wishlist w = wishlistService.createWishlist(userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(entityToDto(w));
+        } catch (DuplicateResourceException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        } catch (BadRequestException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
     }
 
+    // ---------------- GET BY USER ----------------
     @GetMapping("/user/{userId}")
-    public WishlistDto getWishlistByUserId(@PathVariable int userId) {
-        Wishlist w = wishlistService.getWishlistByUserId(userId);
-        return entityToDto(w);
+    public ResponseEntity<?> getWishlistByUserId(@PathVariable int userId) {
+        try {
+            Wishlist w = wishlistService.getWishlistByUserId(userId);
+            return ResponseEntity.ok(entityToDto(w));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
+    // ---------------- GET BY ID ----------------
     @GetMapping("/{wishlistId}")
-    public WishlistDto getWishlistById(@PathVariable int wishlistId) {
-        Wishlist w = wishlistService.getWishlistById(wishlistId);
-        return entityToDto(w);
+    public ResponseEntity<?> getWishlistById(@PathVariable int wishlistId) {
+        try {
+            Wishlist w = wishlistService.getWishlistById(wishlistId);
+            return ResponseEntity.ok(entityToDto(w));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
+    // ---------------- FETCH ALL ----------------
     @GetMapping
     public List<WishlistDto> getAllWishlists() {
         return wishlistService.getAllWishlists()
@@ -63,32 +76,49 @@ public class WishlistController {
                 .collect(Collectors.toList());
     }
 
+    // ---------------- DELETE ----------------
     @DeleteMapping("/{wishlistId}")
-    public String deleteWishlist(@PathVariable int wishlistId) {
-        wishlistService.deleteWishlist(wishlistId);
-        return "Wishlist deleted successfully";
+    public ResponseEntity<?> deleteWishlist(@PathVariable int wishlistId) {
+        try {
+            wishlistService.deleteWishlist(wishlistId);
+            return ResponseEntity.ok("Wishlist deleted successfully");
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
+    // ---------------- EXISTS ----------------
     @GetMapping("/exists/{userId}")
-    public boolean wishlistExistsForUser(@PathVariable int userId) {
-        return wishlistService.wishlistExistsForUser(userId);
+    public ResponseEntity<?> wishlistExistsForUser(@PathVariable int userId) {
+        boolean exists = wishlistService.wishlistExistsForUser(userId);
+        return ResponseEntity.ok(exists);
     }
 
+    // ---------------- EMPTY CHECK ----------------
     @GetMapping("/empty/{wishlistId}")
-    public boolean isWishlistEmpty(@PathVariable int wishlistId) {
-        return wishlistService.isWishlistEmpty(wishlistId);
+    public ResponseEntity<?> isWishlistEmpty(@PathVariable int wishlistId) {
+        try {
+            boolean empty = wishlistService.isWishlistEmpty(wishlistId);
+            return ResponseEntity.ok(empty);
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
-    
+
+    // ---------------- GET ITEMS ----------------
     @GetMapping("/items/{userId}")
     public ResponseEntity<?> getWishlistItems(@PathVariable int userId) {
-        List<Map<String, Object>> items = wishlistService.getWishlistItems(userId);
+        try {
+            List<Map<String, Object>> items = wishlistService.getWishlistItems(userId);
 
-        if (items.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                 .body("No wishlist items found for userId: " + userId);
+            if (items.isEmpty()) {
+                throw new ResourceNotFoundException("No wishlist items found for userId: " + userId);
+            }
+
+            return ResponseEntity.ok(items);
+
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
-
-        return ResponseEntity.ok(items);
     }
-    
 }

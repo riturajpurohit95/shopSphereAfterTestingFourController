@@ -1,4 +1,3 @@
-
 package com.ShopSphere.shop_sphere.repository;
 
 import com.ShopSphere.shop_sphere.model.Wishlist;
@@ -26,7 +25,9 @@ public class WishlistDaoImpl implements WishlistDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // -------- SQL --------
+    // ---------------------------------------
+    // SQL QUERIES
+    // ---------------------------------------
     private static final String INSERT_SQL =
             "INSERT INTO wishlists (user_id) VALUES (?)";
 
@@ -45,15 +46,24 @@ public class WishlistDaoImpl implements WishlistDao {
     private static final String EXISTS_BY_USER_SQL =
             "SELECT COUNT(*) FROM wishlists WHERE user_id = ?";
 
-    // ⚠️ Adjust table/column names if your items table differs
     private static final String COUNT_ITEMS_SQL =
             "SELECT COUNT(*) FROM wishlist_items WHERE wishlist_id = ?";
 
-    // -------- Methods --------
+    private static final String SELECT_ITEMS_BY_USER =
+            "SELECT wi.wishlist_items_id, p.product_id, p.product_name, p.product_price " +
+            "FROM wishlist_items wi " +
+            "INNER JOIN products p ON wi.product_id = p.product_id " +
+            "INNER JOIN wishlists w ON wi.wishlist_id = w.wishlist_id " +
+            "WHERE w.user_id = ?";
+
+    // ---------------------------------------
+    // DAO METHODS
+    // ---------------------------------------
 
     @Override
     public int createWishlist(int userId) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
+
         try {
             int affected = jdbcTemplate.update(con -> {
                 PreparedStatement ps = con.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS);
@@ -64,15 +74,16 @@ public class WishlistDaoImpl implements WishlistDao {
             if (affected > 0 && keyHolder.getKey() != null) {
                 return keyHolder.getKey().intValue();
             }
-        } catch (DuplicateKeyException dke) {
-            // If you enforce UNIQUE(user_id), return the existing wishlist ID
-            Wishlist existing = findByUserId(userId);
-            if (existing != null) {
-                return existing.getWishlistId();
+
+        } catch (DuplicateKeyException e) {
+            // UNIQUE(user_id) violation → return existing wishlist instead of failing
+            Wishlist existingWishlist = findByUserId(userId);
+            if (existingWishlist != null) {
+                return existingWishlist.getWishlistId();
             }
         }
 
-        // Fallback: attempt to fetch by user_id
+        // Fallback: try retrieving again
         Wishlist fallback = findByUserId(userId);
         return (fallback != null) ? fallback.getWishlistId() : 0;
     }
@@ -80,7 +91,8 @@ public class WishlistDaoImpl implements WishlistDao {
     @Override
     public Wishlist findByUserId(int userId) {
         try {
-            return jdbcTemplate.queryForObject(SELECT_BY_USER_ID_SQL, new WishlistRowMapper(), userId);
+            return jdbcTemplate.queryForObject(
+                    SELECT_BY_USER_ID_SQL, new WishlistRowMapper(), userId);
         } catch (EmptyResultDataAccessException ex) {
             return null;
         }
@@ -89,7 +101,8 @@ public class WishlistDaoImpl implements WishlistDao {
     @Override
     public Wishlist findById(int wishlistId) {
         try {
-            return jdbcTemplate.queryForObject(SELECT_BY_ID_SQL, new WishlistRowMapper(), wishlistId);
+            return jdbcTemplate.queryForObject(
+                    SELECT_BY_ID_SQL, new WishlistRowMapper(), wishlistId);
         } catch (EmptyResultDataAccessException ex) {
             return null;
         }
@@ -116,15 +129,9 @@ public class WishlistDaoImpl implements WishlistDao {
         Integer count = jdbcTemplate.queryForObject(COUNT_ITEMS_SQL, Integer.class, wishlistId);
         return count == null || count == 0;
     }
-    
+
     @Override
     public List<Map<String, Object>> getWishlistItems(int userId) {
-        String sql = "SELECT wi.wishlist_items_id, p.product_id, p.product_name, p.product_price " +
-                     "FROM wishlist_items wi " +
-                     "INNER JOIN products p ON wi.product_id = p.product_id " +
-                     "INNER JOIN wishlists w ON wi.wishlist_id = w.wishlist_id " +
-                     "WHERE w.user_id = ?";
-        return jdbcTemplate.queryForList(sql, userId);
+        return jdbcTemplate.queryForList(SELECT_ITEMS_BY_USER, userId);
     }
-
 }

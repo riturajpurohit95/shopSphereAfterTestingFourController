@@ -30,4 +30,5 @@ public interface ReviewService {
     int updateReviewStatus(int reviewId, String status);
     
     List<Map<String, Object>> getReviewsByProductId(int productId);
+
 }
