@@ -25,19 +25,21 @@ public class CategoryDaoImpl implements CategoryDao{
 
 	@Override
 	public Category save(Category category) {
-		String sql = "INSERT INTO categories(category_id, category_name)"
-				+ "VALUES(?, ?)";
+		String sql = "INSERT INTO categories(category_name) VALUES (?)";
 		
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 				
 		jdbcTemplate.update(connection ->{
 			PreparedStatement ps = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
-				ps.setInt(1, category.getCategoryId());
-				ps.setString(2, category.getCategoryName());
+				ps.setString(1, category.getCategoryName());
+			
 				
 				return ps;
 			}, keyHolder);
-		
+		Number generatedId = keyHolder.getKey();
+		if(generatedId != null) {
+			category.setCategoryId(generatedId.intValue());
+		}
 		return category;
 	}
 
@@ -59,11 +61,13 @@ public class CategoryDaoImpl implements CategoryDao{
 
 	@Override
 	public int update(Category category) {
-		String sql = "UPDATE cart_items SET category_name=? WHERE category_id=?";
+		String sql = "UPDATE categories SET category_name=? WHERE category_id=?";
 		
 		return jdbcTemplate.update(sql,
-				category.getCategoryId(),
-				category.getCategoryName()
+				
+				category.getCategoryName(),
+				category.getCategoryId()
+				
 				);
 	}
 

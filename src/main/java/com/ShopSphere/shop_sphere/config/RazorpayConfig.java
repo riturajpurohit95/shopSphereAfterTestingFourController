@@ -1,9 +1,11 @@
 package com.ShopSphere.shop_sphere.config;
 
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import com.razorpay.RazorpayClient;
 
+@Configuration
 public class RazorpayConfig {
 	
 	private final String key;

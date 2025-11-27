@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class ReviewDaoImpl implements ReviewDao {
@@ -62,5 +63,15 @@ public class ReviewDaoImpl implements ReviewDao {
     @Override
     public int updateStatus(int reviewId, String status) {
         return jdbcTemplate.update(UPDATE_STATUS_SQL, status, reviewId);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getReviewsByProductId(int productId) {
+        String sql = "SELECT r.review_id, r.rating, r.review_text, u.name AS reviewer_name " +
+                     "FROM reviews r " +
+                     "INNER JOIN user u ON r.user_id = u.user_id " +
+                     "WHERE r.product_id = ?";
+
+        return jdbcTemplate.queryForList(sql, productId);
     }
 }

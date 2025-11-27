@@ -4,13 +4,13 @@ import jakarta.validation.constraints.NotNull;
 
 public class CartDto {
 	
-	public CartDto(Integer cartId, @NotNull(message = "User ID is required") Integer userId, Double totalAmount,
-			boolean empty) {
+	public CartDto(Integer cartId, @NotNull(message = "User ID is required") Integer userId, Double totalAmount
+			/*boolean empty*/) {
 		super();
 		this.cartId = cartId;
 		this.userId = userId;
 		this.totalAmount = totalAmount;
-		this.empty = empty;
+		//this.empty = empty;
 	}
 	
 	public CartDto(){}
@@ -20,7 +20,8 @@ public class CartDto {
 	private Integer userId;
 //	private List<CartItemDto> items;
 	private Double totalAmount;
-	private boolean empty;
+	
+	//private boolean empty;
 	public Integer getCartId() {
 		return cartId;
 	}
@@ -33,9 +34,9 @@ public class CartDto {
 	public Double getTotalAmount() {
 		return totalAmount;
 	}
-	public boolean isEmpty() {
+	/*public boolean isEmpty() {
 		return empty;
-	}
+	}*/
 	public void setCartId(Integer cartId) {
 		this.cartId = cartId;
 	}
@@ -48,9 +49,9 @@ public class CartDto {
 	public void setTotalAmount(Double totalAmount) {
 		this.totalAmount = totalAmount;
 	}
-	public void setEmpty(boolean empty) {
+	/*public void setEmpty(boolean empty) {
 		this.empty = empty;
-	}
+	}*/
 	
 	
 }

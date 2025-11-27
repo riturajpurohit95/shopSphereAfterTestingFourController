@@ -21,3 +21,46 @@
  
  10) alter table orders add column orderStatus enum('PENDING','PAID','PROCESSSING','SHIPPED','DELIVERED','CANCELLED','REFUNDED') not null;
  11) alter table orders drop column status;
+ 
+ 12)alter table orders add column payment_method enum('COD','UPI') not null;
+ 
+ 13) alter table products add column image_url varchar(255);
+ 
+ 14) drop trigger trg_update_total_amount;
+ 15) DELIMITER //
+mysql> create trigger trg_update_total_amount
+    -> after insert on order_items
+    -> for each row
+    -> BEGIN
+    -> update orders
+    -> SET total_amount = total_amount + NEW.total_item_price
+    -> where order_id = NEW.order_id;
+    -> END //
+    
+    16)INSERT INTO payments
+(order_id, user_id, amount, currency, payment_method, status, gateway_ref, upi_vpa, response_payload)
+VALUES
+(1, 1, 499.00, 'INR', 'COD', 'Pending', NULL, NULL, 'Cash on Delivery not initiated'),
+ 
+(2, 2, 15000.00, 'INR', 'UPI', 'PAID', 'TXNUPI987654321', 'ritu@upi', 'UPI Payment successful'),
+ 
+(3, 4, 999.00, 'INR', 'COD', 'Pending', NULL, NULL, 'Cash on Delivery not initiated'),
+ 
+(4, 5, 3500.00, 'INR', 'UPI', 'PAID', 'TXNUPI123456789', 'user5@upi', 'UPI Payment successful');
+
+17)
+INSERT INTO reviews 
+(user_id, product_id, rating, review_text, status)
+VALUES
+(1, 3, 5, 'Excellent quality T-shirt, very comfortable and perfect fit!', 'VISIBLE'),
+ 
+(2, 2, 4, 'Smartphone performance is great, battery life could be better.', 'VISIBLE'),
+ 
+(4, 6, 5, 'Great football! Good grip and durable material.', 'VISIBLE'),
+ 
+(5, 8, 4, 'The skincare kit is good and shows results in a week.', 'VISIBLE');
+
+
+18)alter table orders add column razorpay_order_id varchar(100) null;
+19) alter table orders modify orderStatus enum('PENDING','PAID','PROCESSSING','SHIPPED','DELIVERED','CANCELLED','REFUNDED','EXPIRED');
+ 

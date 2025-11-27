@@ -60,7 +60,7 @@ public class CartItemController {
 	}
 	
 	
-	@GetMapping("single/{cartID}")
+	@GetMapping("/single/{cartId}")
 	public CartItemDto findItemByCartId(@PathVariable int cartId) {
 		Optional<CartItem> item = cartItemService.findItemByCartId(cartId);
 		return item.map(this::entityToDto)
@@ -73,7 +73,7 @@ public class CartItemController {
 			@PathVariable int quantity) {
 		CartItem updated = cartItemService.updateItemQuantity(cartItemId, quantity);
 		return entityToDto(updated);
-	}
+	}//
 	
 	@DeleteMapping("/{cartItemId}")
 	public String deleteItem(@PathVariable int cartItemId) {
@@ -81,13 +81,13 @@ public class CartItemController {
 		return "Cart item deleted successfully";
 	}
 	
-	@DeleteMapping("/{cartId}/product/{productId}")
+	/*@DeleteMapping("/{cartId}/product/{productId}")
 	public String deleteItemByProductId(
 			@PathVariable int cartId,
 			@PathVariable int productId) {
 		cartItemService.deleteItemByProductId(cartId, productId);
 		return "Product removed from cart";
-	}
+	}*/
 	
 	@GetMapping("/total/{cartId}")
 	public double calculateTotalAmount(@PathVariable int cartId) {

@@ -2,8 +2,11 @@
 package com.ShopSphere.shop_sphere.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.ShopSphere.shop_sphere.dto.ReviewDto;
@@ -69,5 +72,17 @@ public class ReviewController {
     public String updateStatus(@PathVariable int reviewId, @PathVariable String status) {
         int rows = reviewService.updateReviewStatus(reviewId, status);
         return rows > 0 ? "Review status updated" : "No changes";
+    }
+    
+    @GetMapping("/productReview/{productId}")
+    public ResponseEntity<?> getReviewsForProduct(@PathVariable int productId) {
+        List<Map<String, Object>> reviews = reviewService.getReviewsByProductId(productId);
+
+        if (reviews.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                 .body("No reviews found for productId: " + productId);
+        }
+
+        return ResponseEntity.ok(reviews);
     }
 }

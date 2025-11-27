@@ -2,6 +2,7 @@
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -69,6 +70,11 @@ public class WishlistServiceImpl implements WishlistService {
     public boolean isWishlistEmpty(int wishlistId) {
         Wishlist existing = getWishlistById(wishlistId);
         return wishlistDao.isWishlistEmpty(existing.getWishlistId());
+    }
+    
+    @Override
+    public List<Map<String, Object>> getWishlistItems(int userId) {
+        return wishlistDao.getWishlistItems(userId);
     }
     
 }

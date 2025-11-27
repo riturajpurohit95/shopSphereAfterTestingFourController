@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -90,5 +91,16 @@ private final JdbcTemplate jdbcTemplate;
 			String sql="Update Payments SET gateway_ref=?,upi_vpa=?, response_payload where payment_id=?";
 			return jdbcTemplate.update(sql, gatewayRef, upiVpa,responsePayLoad, paymentId);
 		}
+		@Override
+		 public List<Map<String, Object>> getPaymentDetails(int userId) {
+	        String sql = "SELECT p.payment_id, p.amount, p.status, " +
+	                     "o.order_id, o.total_amount " +
+	                     "FROM payments p " +
+	                     "INNER JOIN orders o ON p.order_id = o.order_id " +
+	                     "WHERE p.user_id = ?";
+
+	        return jdbcTemplate.queryForList(sql, userId);
+	    }
+	
 	
 }

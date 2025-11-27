@@ -27,15 +27,18 @@ public class CategoryController {
 	
 	private Category dtoToEntity(CategoryDto dto) {
 		Category category = new Category();
+		
+		if(dto.getCategoryId() != null) {
 		category.setCategoryId(dto.getCategoryId());
-		category.setCategoryName(dto.getName());
+		}
+		category.setCategoryName(dto.getCategoryName());
 		return category;
 	}
 	
 	private CategoryDto entityToDto(Category category) {
 		CategoryDto dto = new CategoryDto();
 		dto.setCategoryId(category.getCategoryId());
-		dto.setName(category.getCategoryName());
+		dto.setCategoryName(category.getCategoryName());
 		return dto;
 	}
 	
@@ -80,7 +83,7 @@ public class CategoryController {
 	@PutMapping("/{categoryId}")
 	public CategoryDto updateCategory(
 			@PathVariable int categoryId,
-			@PathVariable CategoryDto dto) {
+			@RequestBody CategoryDto dto) {
 		Category updated = categoryService.updateCategory(categoryId, dtoToEntity(dto));
 		return entityToDto(updated);
 	}

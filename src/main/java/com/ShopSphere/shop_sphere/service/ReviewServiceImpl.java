@@ -2,6 +2,7 @@
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -106,5 +107,10 @@ public class ReviewServiceImpl implements ReviewService {
             throw new IllegalArgumentException("Invalid status: " + status
                     + ". Allowed values: VISIBLE, HIDDEN, REPORTED");
         }
+    }
+    
+    @Override
+    public List<Map<String, Object>> getReviewsByProductId(int productId) {
+        return reviewDao.getReviewsByProductId(productId);
     }
 }

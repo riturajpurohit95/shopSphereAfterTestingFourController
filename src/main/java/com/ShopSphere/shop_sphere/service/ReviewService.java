@@ -2,6 +2,7 @@
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ShopSphere.shop_sphere.model.Review;
 
@@ -27,4 +28,6 @@ public interface ReviewService {
      * Returns the number of rows affected.
      */
     int updateReviewStatus(int reviewId, String status);
+    
+    List<Map<String, Object>> getReviewsByProductId(int productId);
 }

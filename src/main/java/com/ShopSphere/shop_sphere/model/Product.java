@@ -6,15 +6,15 @@ public class Product {
 	
 	
 
-	public Product(String brand, String description) {
-		super();
-		Brand = brand;
-		this.description = description;
-	}
+	
 
-	public Product(int userId, Integer categoryId, String productName, BigDecimal productPrice, BigDecimal productMrp,
-			Integer productQuantity, BigDecimal productAvgRating, Integer productReviewsCount) {
+	
+
+	public Product(int productId, int userId, Integer categoryId, String productName, BigDecimal productPrice,
+			BigDecimal productMrp, Integer productQuantity, BigDecimal productAvgRating, Integer productReviewsCount,
+			String brand, String productDescription, String imageUrl) {
 		super();
+		this.productId = productId;
 		this.userId = userId;
 		this.categoryId = categoryId;
 		this.productName = productName;
@@ -23,6 +23,9 @@ public class Product {
 		this.productQuantity = productQuantity;
 		this.productAvgRating = productAvgRating;
 		this.productReviewsCount = productReviewsCount;
+		Brand = brand;
+		this.productDescription = productDescription;
+		this.imageUrl = imageUrl;
 	}
 
 	private int productId;
@@ -35,7 +38,8 @@ public class Product {
 	private BigDecimal productAvgRating;
 	private Integer productReviewsCount;
 	private String Brand;
-	private String description;
+	private String productDescription;
+	private String imageUrl;
 	
 	public Product() {}
 
@@ -127,12 +131,22 @@ public class Product {
 		Brand = brand;
 	}
 
-	public String getDescription() {
-		return description;
+	
+
+	public String getImageUrl() {
+		return imageUrl;
 	}
 
-	public void setDescription(String description) {
-		this.description = description;
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
+
+	public String getProductDescription() {
+		return productDescription;
+	}
+
+	public void setProductDescription(String productDescription) {
+		this.productDescription = productDescription;
 	}
 
 	

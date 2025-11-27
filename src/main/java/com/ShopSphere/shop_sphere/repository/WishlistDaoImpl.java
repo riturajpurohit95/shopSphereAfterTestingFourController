@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class WishlistDaoImpl implements WishlistDao {
@@ -115,4 +116,15 @@ public class WishlistDaoImpl implements WishlistDao {
         Integer count = jdbcTemplate.queryForObject(COUNT_ITEMS_SQL, Integer.class, wishlistId);
         return count == null || count == 0;
     }
+    
+    @Override
+    public List<Map<String, Object>> getWishlistItems(int userId) {
+        String sql = "SELECT wi.wishlist_items_id, p.product_id, p.product_name, p.product_price " +
+                     "FROM wishlist_items wi " +
+                     "INNER JOIN products p ON wi.product_id = p.product_id " +
+                     "INNER JOIN wishlists w ON wi.wishlist_id = w.wishlist_id " +
+                     "WHERE w.user_id = ?";
+        return jdbcTemplate.queryForList(sql, userId);
+    }
+
 }

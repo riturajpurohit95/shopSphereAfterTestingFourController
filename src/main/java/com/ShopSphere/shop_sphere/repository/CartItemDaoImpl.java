@@ -61,23 +61,23 @@ public class CartItemDaoImpl implements CartItemDao{
 		}
 	}
 
+	
 	@Override
-	public Optional<CartItem> findByCartId(int cartId) {
-		String sql = "SELECT * from cart_items WHERE  cart_items_id=?";
-		
-		List<CartItem> result = jdbcTemplate.query(sql, new CartItemRowMapper(), cartId);
-		if(result.isEmpty()) return Optional.empty();
-		
-		return Optional.of(result.get(0));
-	}
+		public Optional<CartItem> findByCartId(int cartId) {
+			String sql = "SELECT * from cart_items WHERE  cart_items_id=?";
+			List<CartItem> result = jdbcTemplate.query(sql, new CartItemRowMapper(), cartId);
+			if(result.isEmpty()) return Optional.empty();
+			return Optional.of(result.get(0));
+		}
 
 	@Override
 	public int updateItemQuantity(int cartItemId, int quantity) {
 		String sql = "UPDATE cart_items SET quantity=? WHERE cart_items_id=?";
 		
 		return jdbcTemplate.update(sql,
-				cartItemId,
-				quantity
+				quantity,
+				cartItemId
+				
 				);
 	}
 
@@ -86,11 +86,11 @@ public class CartItemDaoImpl implements CartItemDao{
 		String sql = "DELETE FROM cart_items WHERE cart_items_id = ?";
 		return jdbcTemplate.update(sql,cartItemId);
 	}
-
+	
 
 	@Override
 	public List<CartItem> findAllByCartId(int cartId) {
-		String sql = "SELECT cart_items_id, cart_id, product_id, quantity FROM cart_items WHERE cart_id=?";
+		String sql = "SELECT * from cart_items WHERE  cart_id=?";
 		return jdbcTemplate.query(sql, new CartItemRowMapper(), cartId);
 	}
 
@@ -109,8 +109,8 @@ public class CartItemDaoImpl implements CartItemDao{
 
 	@Override
 	public double calculateTotalAmount(int cartId) {
-		String sql = "SELECT SUM(p.product_price * ci.quantity)"+"FROM cart_items ci"
-					+"JOI products p ON ci.product_id = p.product_id"+"WHERE ci.cart_id=?";
+		String sql = "SELECT SUM(p.product_price * ci.quantity)"+" FROM cart_items ci"
+					+" JOIN products p ON ci.product_id = p.product_id "+"WHERE ci.cart_id=?";
 		Double total = jdbcTemplate.queryForObject(sql,	Double.class, cartId);
 		return total!=null ? total:0.0;
 	}

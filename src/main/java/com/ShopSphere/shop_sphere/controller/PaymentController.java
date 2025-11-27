@@ -2,8 +2,10 @@ package com.ShopSphere.shop_sphere.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -97,6 +99,18 @@ public class PaymentController {
 			PaymentDto updated= paymentService.updateGatewayDetails(paymentId, gatewayRef, upiVpa, responsePayload);
 		     return ResponseEntity.ok(updated);			
 		}
+
+		@GetMapping("/user/{userId}")
+	    public ResponseEntity<?> getPaymentDetails(@PathVariable int userId) {
+	        List<Map<String, Object>> payments = paymentService.getPaymentDetails(userId);
+
+	        if (payments.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                                 .body("No payment details found for userId: " + userId);
+	        }
+
+	        return ResponseEntity.ok(payments);
+	    }
 		
 		}
 	

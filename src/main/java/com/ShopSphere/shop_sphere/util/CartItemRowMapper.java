@@ -12,9 +12,11 @@ public class CartItemRowMapper implements RowMapper<CartItem>{
 	@Override
 	public CartItem mapRow(ResultSet rs, int rowNum)throws SQLException{
 		CartItem c = new CartItem();
+		c.setCartItemsId(rs.getInt("cart_items_id"));
 		c.setCartId(rs.getInt("cart_id"));
 		c.setProductId(rs.getInt("product_id"));
-		c.setQuantity(rs.getInt("quantity"));		
+		c.setQuantity(rs.getInt("quantity"));	
+		
 		return c;
 	}
 

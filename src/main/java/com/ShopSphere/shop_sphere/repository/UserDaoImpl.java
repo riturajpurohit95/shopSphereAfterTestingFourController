@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class UserDaoImpl implements UserDao {
@@ -128,6 +129,16 @@ public class UserDaoImpl implements UserDao {
 		String sql = "SELECT location_id FROM user WHERE user_id = ?";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId);
 	}
+    
+    @Override
+    public Map<String, Object> getUserWithLocation(int userId) {
+        String sql = "SELECT u.user_id, u.name, u.email, l.city, l.hub_value " +
+                     "FROM user u " +
+                     "LEFT JOIN locations l ON u.location_id = l.location_id " +
+                     "WHERE u.user_id = ?";
+
+        return jdbcTemplate.queryForMap(sql, userId);
+    }
     
     
 }

@@ -1,6 +1,8 @@
 package com.ShopSphere.shop_sphere.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -10,22 +12,31 @@ import com.ShopSphere.shop_sphere.exception.PaymentAlreadyCompletedException;
 import com.ShopSphere.shop_sphere.exception.PaymentMethodNotSupportedException;
 import com.ShopSphere.shop_sphere.exception.ResourceNotFoundException;
 import com.ShopSphere.shop_sphere.model.Order;
+import com.ShopSphere.shop_sphere.model.OrderItem;
 import com.ShopSphere.shop_sphere.repository.OrderDao;
+import com.ShopSphere.shop_sphere.repository.OrderItemDao;
+import com.ShopSphere.shop_sphere.repository.ProductDao;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
 	
 
-	public OrderServiceImpl(OrderDao orderDao, PaymentService paymentService, DeliveryService deliveryService) {
+	public OrderServiceImpl(OrderDao orderDao, PaymentService paymentService, DeliveryService deliveryService,
+			ProductDao productDao, OrderItemDao orderItemDao) {
 		super();
 		this.orderDao = orderDao;
 		this.paymentService = paymentService;
 		this.deliveryService = deliveryService;
+		this.productDao = productDao;
+		this.orderItemDao = orderItemDao;
 	}
+
 	private final OrderDao orderDao;
 	private final PaymentService paymentService;
 	private final DeliveryService deliveryService;
+	private final ProductDao productDao;
+	private final OrderItemDao orderItemDao;
 	
 	
 	@Override
@@ -191,7 +202,32 @@ public class OrderServiceImpl implements OrderService {
 		System.out.println("Estimated delivery days: "+deliveryDays);
 		return deliveryDays;
 	}
+	@Override
+	public List<Map<String, Object>> getOrdersWithItems(int userId) {
+        return orderDao.getOrdersWithItems(userId);
+    }
 	
+	@Override 
+	public int expireOldPendingOrders() {
+		LocalDateTime cutOff = LocalDateTime.now().minusMinutes(10);
+		List<Order>OldPendingOrders = orderDao.findByStatusAndPlacedAtBefore("PENDING", cutOff);
+		int expiredCount = 0;
+		for (Order order: OldPendingOrders) {
+			int orderId = order.getOrderId();
+			
+		List<OrderItem> items = orderItemDao.findByOrderId(orderId);
+		for(OrderItem item : items){
+		int productId = item.getProductId();
+		int quantity = item.getQuantity();
+		productDao.increaseStock(productId, quantity);
+		
+		}
+		orderDao.updateOrderStatus(orderId,"EXPIRED");
+		expiredCount++;
+		
+		}
+		return expiredCount;
+	}
 	
 	
 	

@@ -1,6 +1,7 @@
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -80,6 +81,15 @@ public class ProductServiceImpl implements ProductService {
 		return product;
 	}
 	
+	@Override
+	public List<Map<String, Object>> fetchProductsByCategory(int id) {
+	    return productDao.getProductsByCategory(id);
+	}
+
+	@Override
+	public List<Map<String, Object>> fetchSellerProducts(int sellerId) {
+	    return productDao.getSellerProducts(sellerId);
+	}
 	
 	
 	@Override

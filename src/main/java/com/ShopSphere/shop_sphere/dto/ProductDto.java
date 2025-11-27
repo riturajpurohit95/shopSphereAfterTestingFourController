@@ -17,7 +17,12 @@ public class ProductDto {
 
 
 
-	public ProductDto(Integer product_id, String brand, String description,
+
+
+
+
+
+	public ProductDto(Integer product_id, String brand, String productDescription,
 			@NotNull(message = "User Id is required") Integer userId,
 			@NotNull(message = "Category Id is required") Integer categoryId,
 			@NotBlank(message = "Product name is required") String productName,
@@ -25,12 +30,11 @@ public class ProductDto {
 			@NotNull(message = "Product MRP is required") @DecimalMin(value = "0.0", message = "Product MRP must be >=0.0") BigDecimal productMrp,
 			@NotNull(message = "Product quantity is required") @Min(value = 1, message = "Product qsuantity must be >=1") int productQuantity,
 			@NotNull(message = "Product average rating is required") @DecimalMin(value = "0.0", message = "Product average rating must be >=0.0") BigDecimal productAvgRating,
-			@NotBlank(message = "Product Description is required") String productDescription,
 			@NotNull(message = "Product Reviews Count is required") @Min(value = 1, message = "Product Reviews Count must be >=1") Integer productReviewsCount) {
 		super();
 		this.product_id = product_id;
 		this.brand = brand;
-		this.description = description;
+		this.productDescription = productDescription;
 		this.userId = userId;
 		this.categoryId = categoryId;
 		this.productName = productName;
@@ -38,7 +42,6 @@ public class ProductDto {
 		this.productMrp = productMrp;
 		this.productQuantity = productQuantity;
 		this.productAvgRating = productAvgRating;
-		this.productDescription = productDescription;
 		this.productReviewsCount = productReviewsCount;
 	}
 
@@ -48,7 +51,7 @@ public class ProductDto {
 
 	private Integer product_id;
 	private String brand;
-	private String description;
+	//private String productDescription;
 		
 		
 		@NotNull(message  = "User Id is required")
@@ -269,16 +272,22 @@ public class ProductDto {
 
 
 
-		public String getDescription() {
-			return description;
+		
+
+
+
+		public void setImageUrl(String imageUrl) {
+			// TODO Auto-generated method stub
+			
 		}
 
 
 
 
 
-		public void setDescription(String description) {
-			this.description = description;
+		public String getImageUrl() {
+			// TODO Auto-generated method stub
+			return null;
 		}
 
 

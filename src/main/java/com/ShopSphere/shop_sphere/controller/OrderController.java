@@ -2,8 +2,10 @@ package com.ShopSphere.shop_sphere.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -103,7 +105,7 @@ public class OrderController {
 	        return ResponseEntity.ok(entityToDto(updated));		
 		}
 	
-		@PostMapping("{/id}cancel")
+		@PostMapping("/{id}/cancel")
 		public ResponseEntity<OrderDto> cancelOrder(@PathVariable("id") int orderId){
 			Order cancelled = orderService.cancelOrder(orderId);
 			return ResponseEntity.ok(entityToDto(cancelled));
@@ -123,7 +125,18 @@ public class OrderController {
 			return orderService.placeOrder(buyerId, productId);
 		}
 	
-	
+		
+		@GetMapping("/userOrder/{userId}")
+	    public ResponseEntity<?> getOrdersWithItems(@PathVariable int userId) {
+	        List<Map<String, Object>> result = orderService.getOrdersWithItems(userId);
+
+	        if (result.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                                 .body("No orders found for userId: " + userId);
+	        }
+
+	        return ResponseEntity.ok(result);
+		}
 }
 	
 	

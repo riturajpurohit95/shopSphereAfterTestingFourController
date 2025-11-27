@@ -1,6 +1,7 @@
 package com.ShopSphere.shop_sphere.repository;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ShopSphere.shop_sphere.model.Review;
 
@@ -11,4 +12,5 @@ public interface ReviewDao {
 	List<Review> findByUser(int userId);
 	int updateStatus(int reviewIs, String status);
 
+	List<Map<String, Object>> getReviewsByProductId(int productId);
 }

@@ -2,6 +2,7 @@ package com.ShopSphere.shop_sphere.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -42,7 +43,7 @@ public class ProductController {
 	
 	private Product dtoToEntity(ProductDto dto) {
 		Product product = new Product();
-		product.setProductId(dto.getProduct_id());
+		//product.setProductId(dto.getProduct_id());
 		product.setUserId(dto.getUserId());
 		product.setCategoryId(dto.getCategoryId());
 		product.setProductName(dto.getProductName());
@@ -51,6 +52,9 @@ public class ProductController {
 		product.setProductQuantity(dto.getProductQuantity());
 		product.setProductAvgRating(dto.getProductAvgRating());
 		product.setProductReviewsCount(dto.getProductReviewsCount());
+		product.setBrand(dto.getBrand());
+		product.setProductDescription(dto.getProductDescription());
+		product.setImageUrl(dto.getImageUrl());
 	    
 		return product;
 	}
@@ -67,6 +71,9 @@ public class ProductController {
 	    dto.setProductQuantity(product.getProductQuantity());
 	    dto.setProductAvgRating(product.getProductAvgRating());
 	    dto.setProductReviewsCount(product.getProductReviewsCount());
+	    dto.setBrand(product.getBrand());
+	    dto.setProductDescription(product.getProductDescription());
+	    dto.setImageUrl(product.getImageUrl());
 		return dto;
 	}
 	
@@ -152,7 +159,16 @@ public class ProductController {
 			return ResponseEntity.noContent().build();
 		}
 		
-	
+		@GetMapping("/categories/{id}/products")
+		public List<Map<String, Object>> getCategoryProducts(@PathVariable int id) {
+		    return productService.fetchProductsByCategory(id);
+		}
+		
+		@GetMapping("/seller/{id}/products")
+		public List<Map<String, Object>> getSellerProducts(@PathVariable int id) {
+		    return productService.fetchSellerProducts(id);
+		}
+
 	
 	
 }

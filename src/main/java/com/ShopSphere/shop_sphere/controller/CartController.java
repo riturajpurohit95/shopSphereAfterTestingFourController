@@ -1,8 +1,10 @@
 package com.ShopSphere.shop_sphere.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ShopSphere.shop_sphere.dto.CartDto;
+import com.ShopSphere.shop_sphere.dto.CartItemDto;
 import com.ShopSphere.shop_sphere.model.Cart;
 import com.ShopSphere.shop_sphere.service.CartService;
 
@@ -63,7 +66,7 @@ public class CartController {
 				.collect(Collectors.toList());
 	}
 	
-	@DeleteMapping("/{cartId}")
+	@DeleteMapping("{cartId}")
 	public String deleteCart(@PathVariable int cartId) {
 		cartService.deleteCart(cartId);
 		return "Cart deleted successfully";
@@ -74,10 +77,16 @@ public class CartController {
 		return cartService.cartExistsForUser(userId);
 	}
 	
-	@GetMapping("/empty/{cartId}")
+	/*@GetMapping("/empty/{cartId}")
 	public boolean isCartEmpty(@PathVariable int cartId) {
 		return cartService.isCarEmpty(cartId);
-	}
+	}*/
+	
+	@GetMapping("/userCart/{userId}")
+    public ResponseEntity<List<CartItemDto>> getCartItems(@PathVariable int userId) {
+        return ResponseEntity.ok(cartService.getCartItemsByUserId(userId));
+    }
+
 	
 }
 

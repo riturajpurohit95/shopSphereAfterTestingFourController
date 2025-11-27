@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -185,6 +186,11 @@ private PaymentDto modelToDto(Payment payment) {
 		
 		return getPaymentById(paymentId);
 	}
+
+	@Override
+	public List<Map<String, Object>> getPaymentDetails(int userId) {
+        return paymentDao.getPaymentDetails(userId);
+    }
 	
 	
 	

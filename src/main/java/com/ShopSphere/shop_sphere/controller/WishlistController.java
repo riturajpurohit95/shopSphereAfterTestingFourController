@@ -2,8 +2,11 @@
 package com.ShopSphere.shop_sphere.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.ShopSphere.shop_sphere.dto.WishlistDto;
@@ -74,6 +77,18 @@ public class WishlistController {
     @GetMapping("/empty/{wishlistId}")
     public boolean isWishlistEmpty(@PathVariable int wishlistId) {
         return wishlistService.isWishlistEmpty(wishlistId);
+    }
+    
+    @GetMapping("/items/{userId}")
+    public ResponseEntity<?> getWishlistItems(@PathVariable int userId) {
+        List<Map<String, Object>> items = wishlistService.getWishlistItems(userId);
+
+        if (items.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                 .body("No wishlist items found for userId: " + userId);
+        }
+
+        return ResponseEntity.ok(items);
     }
     
 }

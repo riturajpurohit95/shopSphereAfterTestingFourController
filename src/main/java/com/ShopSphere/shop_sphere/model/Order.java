@@ -12,8 +12,9 @@ public class Order {
 
 
 	
+	
 	public Order(int orderId, int userId, BigDecimal totalAmount, String shippingAddress, String orderStatus,
-			LocalDateTime placedAt, String paymentMethod) {
+			LocalDateTime placedAt, String paymentMethod, String razorpayOrderId) {
 		super();
 		this.orderId = orderId;
 		this.userId = userId;
@@ -22,6 +23,7 @@ public class Order {
 		this.orderStatus = orderStatus;
 		this.placedAt = placedAt;
 		this.paymentMethod = paymentMethod;
+		this.razorpayOrderId = razorpayOrderId;
 	}
 
 	private int orderId;
@@ -31,6 +33,8 @@ public class Order {
 	private String orderStatus;
 	private LocalDateTime placedAt;
 	private String paymentMethod;
+
+	private String razorpayOrderId;
 	
 	public Order() {}
 

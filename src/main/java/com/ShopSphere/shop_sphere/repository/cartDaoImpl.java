@@ -3,6 +3,7 @@ package com.ShopSphere.shop_sphere.repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -13,11 +14,11 @@ import com.ShopSphere.shop_sphere.model.Cart;
 import com.ShopSphere.shop_sphere.util.CartRowMapper;
 
 @Repository
-public class CartDaoImpl implements CartDao{
+public class cartDaoImpl implements CartDao{
 	
 	private final JdbcTemplate jdbcTemplate;
 	
-	public CartDaoImpl(JdbcTemplate jdbcTemplate) {
+	public cartDaoImpl(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
@@ -45,14 +46,14 @@ public class CartDaoImpl implements CartDao{
 
 	@Override
 	public Cart findById(int cartId) {
-		String sql = "SELECT cart_id, user_id total_amount FROM carts WHERE cart_id=?";
+		String sql = "SELECT cart_id, user_id  FROM carts WHERE cart_id=?";
 		
 		return jdbcTemplate.queryForObject(sql, new CartRowMapper(), cartId);
 	}
 
 	@Override
 	public List<Cart> getAllCarts() {
-		String sql = "SELECT cart_id, user_id, total_amount FROM carts";
+		String sql = "SELECT cart_id, user_id FROM carts";
 		return jdbcTemplate.query(sql, new CartRowMapper());
 	}
 
@@ -75,5 +76,17 @@ public class CartDaoImpl implements CartDao{
 		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, cartId);
 		return count==null || count==0; 
 	}
+	
+	@Override
+	public List<Map<String, Object>> getCartItems(int userId) {
+	    String sql = "SELECT ci.cart_items_id,ci.cart_id,ci.quantity, p.product_id, p.product_name, p.product_price " +
+	                 "FROM cart_items ci " +
+	                 "INNER JOIN products p ON ci.product_id = p.product_id " +
+	                 "INNER JOIN carts c ON ci.cart_id = c.cart_id " +
+	                 "WHERE c.user_id = ?";
+
+	    return jdbcTemplate.queryForList(sql, userId);
+	}
+	
 
 }

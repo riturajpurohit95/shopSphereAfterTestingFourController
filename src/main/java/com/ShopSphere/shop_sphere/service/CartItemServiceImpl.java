@@ -39,10 +39,9 @@ public class CartItemServiceImpl implements CartItemService{
 		if(rows<=0) {
 			throw new ResourceNotFoundException("CatItem update failed or item not found with id: "+cartItemId);
 		}
-		return cartItemDao.findByCartId(cartItemDao.findByCartId(cartItemId)
+		return cartItemDao.findByCartId(cartItemId)
 										.orElseThrow(() -> new ResourceNotFoundException("CartItem not found"))
-										.getCartId()
-										).orElse(null);
+			;
 	}
 
 	@Override

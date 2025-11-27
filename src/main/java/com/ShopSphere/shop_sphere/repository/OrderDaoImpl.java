@@ -3,7 +3,9 @@ package com.ShopSphere.shop_sphere.repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,7 +39,7 @@ public class OrderDaoImpl implements OrderDao {
 	            ps.setString(3, order.getShippingAddress());
 	            ps.setString(4, order.getOrderStatus());
 	            ps.setTimestamp(5, Timestamp.valueOf(order.getPlacedAt()));
-	           
+	            ps.setString(6, order.getPaymentMethod());
 	            return ps;
 	            }, keyHolder);   
 	            Number key = keyHolder.getKey();
@@ -93,7 +95,27 @@ public class OrderDaoImpl implements OrderDao {
 			return jdbcTemplate.update(sql,orderId);
 		}
 		
-	
+		@Override
+		public List<Order> findByStatusAndPlacedAtBefore(String status, LocalDateTime cutOffTime){
+			String sql ="Select * from orders where status =? and placed_at < ?";
+			return jdbcTemplate.query( sql,  new OrderRowMapper(), status, Timestamp.valueOf(cutOffTime));
+		}
+		@Override
+		public int updateRazorpayOrderId(int orderId, String razorpayOrderId) {
+			String sql="Update orders set razorpay_order_id =? where order_id =?";
+			return jdbcTemplate.update(sql, razorpayOrderId, orderId);
+		}
+		
+		@Override
+		public List<Map<String, Object>> getOrdersWithItems(int userId) {
+	        String sql = "SELECT o.order_id, o.total_amount, o.shipping_address, " +
+	                     "oi.product_name, oi.quantity, oi.unit_price " +
+	                     "FROM orders o " +
+	                     "INNER JOIN order_items oi ON o.order_id = oi.order_id " +
+	                     "WHERE o.user_id = ?";
+
+	        return jdbcTemplate.queryForList(sql, userId);
+		}
 		
 		
 		

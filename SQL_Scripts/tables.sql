@@ -105,7 +105,6 @@ product_name varchar(30),
 quantity int default 1,
 unit_price decimal(12,2) ,
 total_item_price decimal(12,2),
-
 constraint fk_order_items_cart foreign key(order_id) references orders(order_id) on delete cascade,
 constraint fk_order_items_product foreign key(product_id) references products(product_id) on delete set null
 );

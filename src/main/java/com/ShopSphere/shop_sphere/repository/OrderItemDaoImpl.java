@@ -12,6 +12,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import com.ShopSphere.shop_sphere.exception.OutOfStockException;
 import com.ShopSphere.shop_sphere.model.Order;
 import com.ShopSphere.shop_sphere.model.OrderItem;
 import com.ShopSphere.shop_sphere.util.OrderItemRowMapper;
@@ -20,15 +21,27 @@ import com.ShopSphere.shop_sphere.util.OrderRowMapper;
 @Repository
 public class OrderItemDaoImpl implements OrderItemDao {
 
-    private final JdbcTemplate jdbcTemplate;
-	
-	public OrderItemDaoImpl(JdbcTemplate jdbcTemplate) {
+    public OrderItemDaoImpl(JdbcTemplate jdbcTemplate, ProductDao productDao) {
+		super();
 		this.jdbcTemplate = jdbcTemplate;
+		this.productDao = productDao;
 	}
+
+	private final JdbcTemplate jdbcTemplate;
+    private final ProductDao productDao;
+	
+	
 	
 	
 	@Override
-	    public int save(OrderItem orderItem) {    	
+	    public int save(OrderItem orderItem) { 
+		
+		int updatedRows = productDao.decreaseStockIfAvailable(
+				orderItem.getProductId(),
+				orderItem.getQuantity());
+		if (updatedRows == 0) {
+			throw new OutOfStockException("Not enough stock for productId: "+ orderItem.getProductId());
+		}
 	    	
 	    	 String sql = "INSERT INTO order_items (order_id,product_id,quantity,unit_price,total_item_price) " +
 	                "VALUES (?, ?, ?, ?, ?)";
@@ -88,6 +101,14 @@ public class OrderItemDaoImpl implements OrderItemDao {
 		//delete order item
 		@Override
 		public int deleteById(int orderItemsId) {
+			
+			Optional<OrderItem> optional = findById(orderItemsId);
+			if(!optional.isPresent()) {
+				return 0;
+			}
+			OrderItem item = optional.get();
+			
+			productDao.increaseStock(item.getProductId(), item.getQuantity());
 			String sql = "delete from order_items where order_items_id=?";
 			return jdbcTemplate.update(sql,orderItemsId);
 		}

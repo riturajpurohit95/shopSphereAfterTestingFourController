@@ -4,7 +4,7 @@
 -----check stock before placing order if enough stock available---
 DELIMITER //
 create trigger trg_check_stock_availability
-befOre insert on order_items
+before insert on order_items
 for each row
 BEGIN
 	DECLARE available_stock int DEFAULT 0;

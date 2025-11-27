@@ -2,6 +2,7 @@
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
@@ -162,5 +163,10 @@ public class UserServiceImpl implements UserService {
                 || "Buyer".equalsIgnoreCase(normalized))) {
             throw new IllegalArgumentException("Invalid role: " + role + ". Allowed: Admin, Seller, Buyer");
         }
+    }
+    
+    @Override
+    public Map<String, Object> getUserWithLocation(int userId) {
+        return userDao.getUserWithLocation(userId);
     }
 }

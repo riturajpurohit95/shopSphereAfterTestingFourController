@@ -26,7 +26,7 @@ public class LocationController {
 	
 	private Location dtoToEntity(LocationDto dto) {
 		Location loc = new Location();
-		loc.setLocationId(dto.getLocationId());
+		//loc.setLocationId(dto.getLocationId());
 		loc.setCity(dto.getCity());
 		loc.setHubValue(dto.getHubValue());
 		return loc;

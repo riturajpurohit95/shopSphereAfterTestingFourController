@@ -1,9 +1,13 @@
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.ShopSphere.shop_sphere.dto.CartItemDto;
+import com.ShopSphere.shop_sphere.exception.CartNotFoundException;
 import com.ShopSphere.shop_sphere.exception.ResourceNotFoundException;
 import com.ShopSphere.shop_sphere.model.Cart;
 import com.ShopSphere.shop_sphere.repository.CartDao;
@@ -41,7 +45,7 @@ public class CartServiceImpl implements CartService{
 		Cart cart = cartDao.findById(cartId);
 		
 		if(cart == null) {
-			throw new ResourceNotFoundException("No cart found for userId: "+cartId);
+			throw new CartNotFoundException("No cart found for userId: "+cartId);
 		}
 		return cart;
 	}
@@ -72,7 +76,23 @@ public class CartServiceImpl implements CartService{
 		return cartDao.isCartEmpty(existing.getCartId());
 	}
 	
+	@Override
+    public List<CartItemDto> getCartItemsByUserId(int userId) {
 
+        List<Map<String, Object>> rows = cartDao.getCartItems(userId);
+
+        return rows.stream().map(r -> {
+            int cartItemsId = ((Number) r.get("cart_items_id")).intValue();
+            int cartId =((Number)r.get("cart_id")).intValue();
+            int quantity = ((Number)r.get("quantity")).intValue();
+            int productId = ((Number) r.get("product_id")).intValue();
+            String productName = r.get("product_name").toString();
+            double productPrice = ((Number) r.get("product_price")).doubleValue();
+
+            return new CartItemDto(cartItemsId, cartId, productId,quantity, productName, productPrice);
+
+        }).collect(Collectors.toList());
+    }
 	
 
 }

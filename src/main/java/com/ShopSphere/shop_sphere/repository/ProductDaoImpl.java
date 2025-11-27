@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,6 +12,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import com.ShopSphere.shop_sphere.exception.OutOfStockException;
 import com.ShopSphere.shop_sphere.model.OrderItem;
 import com.ShopSphere.shop_sphere.model.Product;
 import com.ShopSphere.shop_sphere.util.OrderItemRowMapper;
@@ -30,21 +32,24 @@ public class ProductDaoImpl implements ProductDao {
 		@Override
 		    public int save(Product product) {    	
 		    	
-		    	 String sql = "INSERT INTO products (product_id,user_id,category_id,product_name,product_price,product_mrp,product_quantity,product_avg_rating,product_reviews_count,brand,description) " +
-		                "VALUES (?, ?, ?, ?, ?,?,?,?,?,?)";
+		    	 String sql = "INSERT INTO products (user_id,category_id,product_name,product_price,product_mrp,product_quantity,product_avg_rating,product_reviews_count,brand,description,image_url) " +
+		                "VALUES (?, ?, ?, ?, ?,?,?,?,?,?,?)";
 		         KeyHolder keyHolder = new GeneratedKeyHolder(); 
 		         jdbcTemplate.update(connection -> {                   
 		            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-		            ps.setInt(1, product.getProductId());
-		            ps.setInt(2, product.getUserId());
-		            ps.setInt(3, product.getCategoryId());
-		            ps.setInt(4, product.getProductQuantity());
-		            ps.setBigDecimal(5, product.getProductPrice());
-		            ps.setBigDecimal(6, product.getProductMrp());
+		            //ps.setInt(1, product.getProductId());
+		            ps.setInt(1, product.getUserId());
+		            ps.setInt(2, product.getCategoryId());
+		            ps.setString(3, product.getProductName());
+		           
+		            ps.setBigDecimal(4, product.getProductPrice());
+		            ps.setBigDecimal(5, product.getProductMrp());
+		            ps.setInt(6, product.getProductQuantity());
 		            ps.setBigDecimal(7, product.getProductAvgRating());
 		            ps.setInt(8, product.getProductReviewsCount());
 		            ps.setString(9, product.getBrand());
-		            ps.setString(10,product.getDescription());
+		            ps.setString(10,product.getProductDescription());
+		            ps.setString(11,product.getImageUrl());
 		            return ps;
 		            }, keyHolder);   
 		            Number key = keyHolder.getKey();
@@ -111,7 +116,7 @@ public class ProductDaoImpl implements ProductDao {
 						product.getProductAvgRating(),
 						product.getProductReviewsCount(),
 				        product.getBrand(),
-				        product.getDescription());
+				        product.getProductDescription());
 			}
 			
 			//delete product
@@ -139,6 +144,41 @@ public class ProductDaoImpl implements ProductDao {
 			public int getSellerIdByProductId(int productId) {
 				String sql = "SELECT user_id FROM products WHERE product_id=?";
 				return jdbcTemplate.queryForObject(sql, Integer.class, productId);
+			}
+			
+			@Override
+			public int decreaseStockIfAvailable(int productId, int quantity) {
+				String sql = "Update products set product_quantity = product_quantity - ? where product_id =? AND product_quantity >=?";
+				int rows =  jdbcTemplate.update(sql,quantity, productId, quantity);
+				
+				if(rows <=0) {
+					throw new OutOfStockException("Not enough stock to reduce for productId: "+ productId);
+				}
+				return rows;
+			}
+			@Override
+			public int increaseStock(int productId, int quantity) {
+				String sql = "Update products set product_quantity = product_quantity + ? where product_id =? ";
+				return jdbcTemplate.update(sql,quantity, productId);
+			}
+			@Override
+			public List<Map<String, Object>> getProductsByCategory(int categoryId) {
+			    String sql = "SELECT p.product_id, p.product_name, p.product_price, p.product_mrp, " +
+			                 "c.category_name FROM products p " +
+			                 "INNER JOIN categories c ON p.category_id = c.category_id " +
+			                 "WHERE c.category_id = ?";
+
+			    return jdbcTemplate.queryForList(sql, categoryId);
+			}
+			
+			@Override
+			public List<Map<String, Object>> getSellerProducts(int sellerId) {
+			    String sql = "SELECT p.product_id, p.product_name, p.product_price, p.product_quantity, " +
+			                 "u.name AS seller_name FROM products p " +
+			                 "INNER JOIN user u ON p.user_id = u.user_id " +
+			                 "WHERE p.user_id = ?";
+
+			    return jdbcTemplate.queryForList(sql, sellerId);
 			}
 		
 }

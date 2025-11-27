@@ -1,6 +1,7 @@
 package com.ShopSphere.shop_sphere.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.ShopSphere.shop_sphere.model.Order;
@@ -14,4 +15,8 @@ public interface OrderService {
 	Order cancelOrder(int orderId);
 	void deleteOrder(int orderId);
 	int placeOrder(int buyerId, int productId);
+	
+	int expireOldPendingOrders();
+
+	List<Map<String, Object>> getOrdersWithItems(int userId);
 }

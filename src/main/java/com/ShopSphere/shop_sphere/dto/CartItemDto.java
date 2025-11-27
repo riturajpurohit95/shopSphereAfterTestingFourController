@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class CartItemDto {
 	
+
 	public CartItemDto() {
 		super();
 	}
@@ -17,6 +18,23 @@ public class CartItemDto {
 		this.quantity = quantity;
 	}
 	
+	
+
+
+	public CartItemDto(Integer cartItemsId, @NotNull(message = "Cart ID is required")  Integer cartId, @NotNull(message = "Quantity is required") Integer quantity,@NotNull(message = "Product ID is required")  Integer productId, String productName,
+			double productPrice) {
+		
+		this.cartItemId = cartItemsId;
+		this.cartId = cartId;
+this.productId = productId;
+		this.quantity = quantity;
+		//this.productName = productName;
+		//this.productPrice= productPrice;
+	}
+
+
+
+
 	private Integer cartItemId;
 	@NotNull(message = "Cart ID is required")
 	private Integer cartId;
@@ -24,9 +42,10 @@ public class CartItemDto {
 	private Integer productId;
 	@NotNull(message = "Quantity is required")
 	private Integer quantity;
-	private String productName;
-	private Double productPrice;
-	private Double totalItemPrice;
+	//private String productName;
+	//private Double productPrice;
+	
+	//private Double totalItemPrice;
 	
 	public Integer getCartItemId() {
 		return cartItemId;
@@ -40,15 +59,13 @@ public class CartItemDto {
 	public Integer getQuantity() {
 		return quantity;
 	}
-	public String getProductName() {
+	/*public String getProductName() {
 		return productName;
 	}
 	public Double getProductPrice() {
 		return productPrice;
-	}
-	public Double getTotalItemPrice() {
-		return totalItemPrice;
-	}
+	}*/
+	
 	public void setCartItemId(Integer cartItemId) {
 		this.cartItemId = cartItemId;
 	}
@@ -61,17 +78,16 @@ public class CartItemDto {
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
 	}
-	public void setProductName(String productName) {
+/*	public void setProductName(String productName) {
 		this.productName = productName;
 	}
 	public void setProductPrice(Double productPrice) {
 		this.productPrice = productPrice;
-	}
-	public void setTotalItemPrice(Double totalItemPrice) {
-		this.totalItemPrice = totalItemPrice;
-	}
+	}*/
+
 	
 	
 
 }
+
 
