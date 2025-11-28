@@ -77,4 +77,14 @@ public class WishlistItemServiceImpl implements WishlistItemService {
 
         return rows;
     }
+    
+    @Override
+    public int getWishlistIdByItem(int wishlistItemId) {
+        return wishlistItemDao.getWishlistIdByItem(wishlistItemId);
+    }
+    
+    @Override
+    public int getWishlistOwnerId(int wishlistId) {
+        return wishlistItemDao.getWishlistOwnerId(wishlistId);
+    }
 }

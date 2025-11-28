@@ -22,4 +22,8 @@ public interface WishlistItemService {
      * Returns the number of rows affected.
      */
     int deleteItem(int wishlistItemId);
+    
+    int getWishlistIdByItem(int wishlistItemId);
+    
+    int getWishlistOwnerId(int wishlistId);
 }

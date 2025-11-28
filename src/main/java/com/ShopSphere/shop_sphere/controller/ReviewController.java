@@ -1,4 +1,3 @@
-
 package com.ShopSphere.shop_sphere.controller;
 
 import java.util.List;
@@ -11,7 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 import com.ShopSphere.shop_sphere.dto.ReviewDto;
 import com.ShopSphere.shop_sphere.model.Review;
+import com.ShopSphere.shop_sphere.security.AllowedRoles;
+import com.ShopSphere.shop_sphere.security.SecurityUtil;
 import com.ShopSphere.shop_sphere.service.ReviewService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -47,11 +50,30 @@ public class ReviewController {
         return dto;
     }
 
+    // ---------------- Security Helpers ----------------
+    private void validateAdmin(HttpServletRequest request) {
+        if (!SecurityUtil.isAdmin(request)) {
+            throw new SecurityException("Unauthorized: Admin access required");
+        }
+    }
+
+    private void validateUser(HttpServletRequest request, int userId) {
+        int loggedUserId = SecurityUtil.getLoggedInUserId(request);
+        if (!SecurityUtil.isAdmin(request) && loggedUserId != userId) {
+            throw new SecurityException("Unauthorized: Cannot access another user's data");
+        }
+    }
+
+    // ---------------- API Endpoints ----------------
+
+    @AllowedRoles({"USER"})
     @PostMapping
-    public int saveReview(@RequestBody ReviewDto dto) {
+    public int saveReview(@RequestBody ReviewDto dto, HttpServletRequest request) {
+        validateUser(request, dto.getUserId());
         return reviewService.saveReview(dtoToEntity(dto));
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/product/{productId}")
     public List<ReviewDto> getReviewsByProduct(@PathVariable int productId) {
         return reviewService.getReviewsByProduct(productId)
@@ -60,20 +82,25 @@ public class ReviewController {
                 .collect(Collectors.toList());
     }
 
+    @AllowedRoles({"USER"})
     @GetMapping("/user/{userId}")
-    public List<ReviewDto> getReviewsByUser(@PathVariable int userId) {
+    public List<ReviewDto> getReviewsByUser(@PathVariable int userId, HttpServletRequest request) {
+        validateUser(request, userId);
         return reviewService.getReviewsByUser(userId)
                 .stream()
                 .map(this::entityToDto)
                 .collect(Collectors.toList());
     }
 
+    @AllowedRoles({"ADMIN"})
     @PatchMapping("/{reviewId}/status/{status}")
-    public String updateStatus(@PathVariable int reviewId, @PathVariable String status) {
+    public String updateStatus(@PathVariable int reviewId, @PathVariable String status, HttpServletRequest request) {
+        validateAdmin(request);
         int rows = reviewService.updateReviewStatus(reviewId, status);
         return rows > 0 ? "Review status updated" : "No changes";
     }
-    
+
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/productReview/{productId}")
     public ResponseEntity<?> getReviewsForProduct(@PathVariable int productId) {
         List<Map<String, Object>> reviews = reviewService.getReviewsByProductId(productId);
@@ -85,5 +112,4 @@ public class ReviewController {
 
         return ResponseEntity.ok(reviews);
     }
-
 }

@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.*;
 
 import com.ShopSphere.shop_sphere.dto.UserDto;
 import com.ShopSphere.shop_sphere.model.User;
+import com.ShopSphere.shop_sphere.security.AllowedRoles;
+import com.ShopSphere.shop_sphere.security.SecurityUtil;
 import com.ShopSphere.shop_sphere.service.UserService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -23,20 +26,17 @@ public class UserController {
 
     private final UserService userService;
 
-    // Constructor injection (preferred)
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    // -------- Mappers (Model <-> DTO) --------
+    // -------- Mappers --------
 
     private User dtoToEntity(UserDto dto) {
         User u = new User();
         u.setUserId(dto.getUserId() != null ? dto.getUserId() : 0);
         u.setName(dto.getName());
         u.setEmail(dto.getEmail());
-        // NOTE: UserDto intentionally does NOT carry password. If you need it for create/update,
-        // accept a separate request DTO like UserRegisterRequest and map password there.
         u.setPhone(dto.getPhone());
         u.setRole(dto.getRole());
         u.setLocationId(dto.getLocationId());
@@ -48,39 +48,51 @@ public class UserController {
         dto.setUserId(u.getUserId());
         dto.setName(u.getName());
         dto.setEmail(u.getEmail());
-        // Do NOT expose password in responses
         dto.setPhone(u.getPhone());
         dto.setRole(u.getRole());
         dto.setLocationId(u.getLocationId());
         return dto;
     }
 
+    // -------- Security Helpers --------
+
+    private void validateAdmin(HttpServletRequest request) {
+        if (!SecurityUtil.isAdmin(request)) {
+            throw new SecurityException("Unauthorized: Admin access required");
+        }
+    }
+
+    private void validateUserOrAdmin(HttpServletRequest request, int userId) {
+        int loggedUserId = SecurityUtil.getLoggedInUserId(request);
+        if (!SecurityUtil.isAdmin(request) && loggedUserId != userId) {
+            throw new SecurityException("Unauthorized: Cannot access or modify another user's data");
+        }
+    }
+
     // -------- Endpoints --------
 
+    @AllowedRoles({"ADMIN"})
     @PostMapping
     public int createUser(@Valid @RequestBody UserDto dto) {
-        // If your service requires a password, this endpoint should accept a different DTO.
-        // Here we create a user with fields present in UserDto only.
         return userService.createUser(dtoToEntity(dto));
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/{userId}")
-    public UserDto getUserById(@PathVariable int userId) {
+    public UserDto getUserById(@PathVariable int userId, HttpServletRequest request) {
+        validateUserOrAdmin(request, userId);
         User u = userService.getUserById(userId);
-        if (u == null) {
-            // You could throw a custom NotFoundException and handle via @ControllerAdvice
-            // For now, let it return null or change to 404 handling as needed.
-            return null;
-        }
-        return entityToDto(u);
+        return u != null ? entityToDto(u) : null;
     }
 
+    @AllowedRoles({"ADMIN"})
     @GetMapping("/email/{email}")
     public UserDto getUserByEmail(@PathVariable String email) {
         User u = userService.getUserByEmail(email);
         return u != null ? entityToDto(u) : null;
     }
 
+    @AllowedRoles({"ADMIN"})
     @GetMapping
     public List<UserDto> getAllUsers() {
         return userService.getAllUsers()
@@ -89,26 +101,33 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @PutMapping("/{userId}")
-    public String updateUser(@PathVariable int userId, @Valid @RequestBody UserDto dto) {
+    public String updateUser(@PathVariable int userId, @Valid @RequestBody UserDto dto, HttpServletRequest request) {
+        validateUserOrAdmin(request, userId);
         User u = dtoToEntity(dto);
-        u.setUserId(userId); // trust path param as source of truth
+        u.setUserId(userId);
         int rows = userService.updateUser(u);
         return rows > 0 ? "User updated successfully" : "No changes";
     }
 
+    @AllowedRoles({"ADMIN"})
     @DeleteMapping("/{userId}")
     public String deleteUser(@PathVariable int userId) {
         userService.deleteUser(userId);
         return "User deleted successfully";
     }
 
+    @AllowedRoles({"ADMIN"})
     @GetMapping("/exists/{email}")
     public boolean userExists(@PathVariable String email) {
         return userService.userExistsByEmail(email);
     }
+
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/{userId}/profile")
-    public ResponseEntity<?> getUserProfile(@PathVariable int userId) {
+    public ResponseEntity<?> getUserProfile(@PathVariable int userId, HttpServletRequest request) {
+        validateUserOrAdmin(request, userId);
         try {
             Map<String, Object> userProfile = userService.getUserWithLocation(userId);
             return ResponseEntity.ok(userProfile);

@@ -16,4 +16,5 @@ public interface CartItemDao {
     int deleteItem(int cartItemId);
     int deleteItemByProductId(int cartId, int productId);
     double calculateTotalAmount(int cartId);
+    Optional<CartItem> findById(int cartItemId);
 }

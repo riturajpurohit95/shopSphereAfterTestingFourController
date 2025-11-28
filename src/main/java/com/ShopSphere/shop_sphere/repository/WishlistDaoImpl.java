@@ -134,4 +134,6 @@ public class WishlistDaoImpl implements WishlistDao {
     public List<Map<String, Object>> getWishlistItems(int userId) {
         return jdbcTemplate.queryForList(SELECT_ITEMS_BY_USER, userId);
     }
+    
+
 }

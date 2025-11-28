@@ -9,7 +9,11 @@ import org.springframework.web.bind.annotation.*;
 import com.ShopSphere.shop_sphere.dto.CartDto;
 import com.ShopSphere.shop_sphere.dto.CartItemDto;
 import com.ShopSphere.shop_sphere.model.Cart;
+import com.ShopSphere.shop_sphere.security.AllowedRoles;
+import com.ShopSphere.shop_sphere.security.SecurityUtil;
 import com.ShopSphere.shop_sphere.service.CartService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/carts")
@@ -23,17 +27,6 @@ public class CartController {
 
     // ---------------- Helper Mapping Methods ----------------
 
-//    private Cart dtoToEntity(CartDto cartDto) {
-//        Cart cart = new Cart();
-//        cart.setCartId(cartDto.getCartId());
-//        cart.setUserId(cartDto.getUserId());
-//        return cart;
-//    }
-    
-//    Using dtoToEntity() in CartController adds dead code, potential security 
-//    issues, and no actual benefit. It’s safer, cleaner, and more maintainable to omit 
-//    it entirely in this context.
-
     private CartDto entityToDto(Cart cart) {
         CartDto cartDto = new CartDto();
         cartDto.setCartId(cart.getCartId());
@@ -41,80 +34,78 @@ public class CartController {
         return cartDto;
     }
 
+    // ---------------------- Security Helper ----------------
+
+    private void validateUserCart(int userId, HttpServletRequest request) {
+        int loggedUserId = SecurityUtil.getLoggedInUserId(request);
+        if (!SecurityUtil.isAdmin(request) && loggedUserId != userId) {
+            throw new SecurityException("Unauthorized: Cannot access another user's cart");
+        }
+    }
+
+    private void validateCartById(int cartId, HttpServletRequest request) {
+        Cart cart = cartService.getCartById(cartId);
+        int loggedUserId = SecurityUtil.getLoggedInUserId(request);
+        if (!SecurityUtil.isAdmin(request) && loggedUserId != cart.getUserId()) {
+            throw new SecurityException("Unauthorized: Cannot access another user's cart");
+        }
+    }
+
     // ---------------------- API Endpoints ------------------------
 
-    // Create Cart for User
+    @AllowedRoles({"USER"})
     @PostMapping("/{userId}")
-    public ResponseEntity<CartDto> createCart(@PathVariable int userId) {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("Invalid user ID");
-        }
-
+    public ResponseEntity<CartDto> createCart(@PathVariable int userId, HttpServletRequest request) {
+        validateUserCart(userId, request);
         Cart cart = cartService.createCart(userId);
         return ResponseEntity.ok(entityToDto(cart));
     }
 
-    // Get Cart by UserID
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/user/{userId}")
-    public ResponseEntity<CartDto> getCartByUserId(@PathVariable int userId) {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("Invalid user ID");
-        }
-
+    public ResponseEntity<CartDto> getCartByUserId(@PathVariable int userId, HttpServletRequest request) {
+        validateUserCart(userId, request);
         Cart cart = cartService.getCartByUserId(userId);
         return ResponseEntity.ok(entityToDto(cart));
     }
 
-    // Get Cart by CartID
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/{cartId}")
-    public ResponseEntity<CartDto> getCartById(@PathVariable int cartId) {
-        if (cartId <= 0) {
-            throw new IllegalArgumentException("Invalid cart ID");
-        }
-
+    public ResponseEntity<CartDto> getCartById(@PathVariable int cartId, HttpServletRequest request) {
+        validateCartById(cartId, request);
         Cart cart = cartService.getCartById(cartId);
         return ResponseEntity.ok(entityToDto(cart));
     }
 
-    // Get All Carts
+    @AllowedRoles({"ADMIN"})
     @GetMapping
     public ResponseEntity<List<CartDto>> getAllCarts() {
         List<CartDto> carts = cartService.getAllCarts()
                 .stream()
                 .map(this::entityToDto)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(carts);
     }
 
-    // Delete Cart
+    @AllowedRoles({"USER", "ADMIN"})
     @DeleteMapping("/{cartId}")
-    public ResponseEntity<String> deleteCart(@PathVariable int cartId) {
-        if (cartId <= 0) {
-            throw new IllegalArgumentException("Invalid cart ID");
-        }
-
+    public ResponseEntity<String> deleteCart(@PathVariable int cartId, HttpServletRequest request) {
+        validateCartById(cartId, request);
         cartService.deleteCart(cartId);
         return ResponseEntity.ok("Cart deleted successfully");
     }
 
-    // Check if Cart exists for User
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/exists/{userId}")
-    public ResponseEntity<Boolean> cartExistsForUser(@PathVariable int userId) {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("Invalid user ID");
-        }
-
+    public ResponseEntity<Boolean> cartExistsForUser(@PathVariable int userId, HttpServletRequest request) {
+        validateUserCart(userId, request);
         return ResponseEntity.ok(cartService.cartExistsForUser(userId));
     }
 
-    // Get Cart Items for a User
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/userCart/{userId}")
-    public ResponseEntity<List<CartItemDto>> getCartItems(@PathVariable int userId) {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("Invalid user ID");
-        }
-
+    public ResponseEntity<List<CartItemDto>> getCartItems(@PathVariable int userId, HttpServletRequest request) {
+        validateUserCart(userId, request);
         return ResponseEntity.ok(cartService.getCartItemsByUserId(userId));
     }
 }

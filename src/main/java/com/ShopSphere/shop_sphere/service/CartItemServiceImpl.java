@@ -91,4 +91,10 @@ public class CartItemServiceImpl implements CartItemService {
     public boolean existsInCart(int cartId, int productId) {
         return cartItemDao.existsInCart(cartId, productId);
     }
+
+    @Override
+    public CartItem getItemById(int cartItemId) {
+        return cartItemDao.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with id: " + cartItemId));
+    }
 }

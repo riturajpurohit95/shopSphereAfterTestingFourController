@@ -15,4 +15,5 @@ public interface CartItemService {
     void deleteItemByProductId(int cartId, int productId);
     double calculateTotalAmount(int cartId);
     boolean existsInCart(int cartId, int productId);
+	CartItem getItemById(int cartItemId);
 }

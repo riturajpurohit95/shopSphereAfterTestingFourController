@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import com.ShopSphere.shop_sphere.model.CartItem;
+import com.ShopSphere.shop_sphere.util.CartItemRowMapper;
 
 @Repository
 public class CartItemDaoImpl implements CartItemDao {
@@ -104,5 +105,15 @@ public class CartItemDaoImpl implements CartItemDao {
 
         Double total = jdbcTemplate.queryForObject(sql, Double.class, cartId);
         return total != null ? total : 0.0;
+    }
+    
+    public Optional<CartItem> findById(int cartItemId) {
+        String sql = "SELECT * FROM cart_items WHERE cart_item_id = ?";
+        try {
+            CartItem item = jdbcTemplate.queryForObject(sql,new  CartItemRowMapper(), cartItemId);
+            return Optional.ofNullable(item);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 }

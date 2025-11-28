@@ -9,5 +9,6 @@ public interface WishlistItemDao {
 	int addItem(WishlistItem wishlistItem);
 	List<WishlistItem> findByWishlistId(int wishlistId);
 	int deleteItem(int wishlistItemId);
-
+	int getWishlistIdByItem(int wishlistItemId);
+	int getWishlistOwnerId(int wishlistId);
 }

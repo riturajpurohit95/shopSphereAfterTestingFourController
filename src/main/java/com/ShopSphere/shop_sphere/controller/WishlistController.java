@@ -13,7 +13,11 @@ import com.ShopSphere.shop_sphere.exception.BadRequestException;
 import com.ShopSphere.shop_sphere.exception.DuplicateResourceException;
 import com.ShopSphere.shop_sphere.exception.ResourceNotFoundException;
 import com.ShopSphere.shop_sphere.model.Wishlist;
+import com.ShopSphere.shop_sphere.security.AllowedRoles;
+import com.ShopSphere.shop_sphere.security.SecurityUtil;
 import com.ShopSphere.shop_sphere.service.WishlistService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/wishlists")
@@ -32,9 +36,19 @@ public class WishlistController {
         return dto;
     }
 
+    // ---------------- Security Helpers ----------------
+    private void validateUserOrAdmin(HttpServletRequest request, int userId) {
+        int loggedUserId = SecurityUtil.getLoggedInUserId(request);
+        if (!SecurityUtil.isAdmin(request) && loggedUserId != userId) {
+            throw new SecurityException("Unauthorized: Cannot access another user's wishlist");
+        }
+    }
+
     // ---------------- CREATE ----------------
+    @AllowedRoles({"USER", "ADMIN"})
     @PostMapping("/{userId}")
-    public ResponseEntity<?> createWishlist(@PathVariable int userId) {
+    public ResponseEntity<?> createWishlist(@PathVariable int userId, HttpServletRequest request) {
+        validateUserOrAdmin(request, userId);
         try {
             Wishlist w = wishlistService.createWishlist(userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(entityToDto(w));
@@ -46,8 +60,10 @@ public class WishlistController {
     }
 
     // ---------------- GET BY USER ----------------
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getWishlistByUserId(@PathVariable int userId) {
+    public ResponseEntity<?> getWishlistByUserId(@PathVariable int userId, HttpServletRequest request) {
+        validateUserOrAdmin(request, userId);
         try {
             Wishlist w = wishlistService.getWishlistByUserId(userId);
             return ResponseEntity.ok(entityToDto(w));
@@ -57,10 +73,12 @@ public class WishlistController {
     }
 
     // ---------------- GET BY ID ----------------
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/{wishlistId}")
-    public ResponseEntity<?> getWishlistById(@PathVariable int wishlistId) {
+    public ResponseEntity<?> getWishlistById(@PathVariable int wishlistId, HttpServletRequest request) {
         try {
             Wishlist w = wishlistService.getWishlistById(wishlistId);
+            validateUserOrAdmin(request, w.getUserId());
             return ResponseEntity.ok(entityToDto(w));
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
@@ -68,6 +86,7 @@ public class WishlistController {
     }
 
     // ---------------- FETCH ALL ----------------
+    @AllowedRoles({"ADMIN"})
     @GetMapping
     public List<WishlistDto> getAllWishlists() {
         return wishlistService.getAllWishlists()
@@ -77,9 +96,12 @@ public class WishlistController {
     }
 
     // ---------------- DELETE ----------------
+    @AllowedRoles({"USER", "ADMIN"})
     @DeleteMapping("/{wishlistId}")
-    public ResponseEntity<?> deleteWishlist(@PathVariable int wishlistId) {
+    public ResponseEntity<?> deleteWishlist(@PathVariable int wishlistId, HttpServletRequest request) {
         try {
+            Wishlist w = wishlistService.getWishlistById(wishlistId);
+            validateUserOrAdmin(request, w.getUserId());
             wishlistService.deleteWishlist(wishlistId);
             return ResponseEntity.ok("Wishlist deleted successfully");
         } catch (ResourceNotFoundException ex) {
@@ -88,16 +110,21 @@ public class WishlistController {
     }
 
     // ---------------- EXISTS ----------------
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/exists/{userId}")
-    public ResponseEntity<?> wishlistExistsForUser(@PathVariable int userId) {
+    public ResponseEntity<?> wishlistExistsForUser(@PathVariable int userId, HttpServletRequest request) {
+        validateUserOrAdmin(request, userId);
         boolean exists = wishlistService.wishlistExistsForUser(userId);
         return ResponseEntity.ok(exists);
     }
 
     // ---------------- EMPTY CHECK ----------------
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/empty/{wishlistId}")
-    public ResponseEntity<?> isWishlistEmpty(@PathVariable int wishlistId) {
+    public ResponseEntity<?> isWishlistEmpty(@PathVariable int wishlistId, HttpServletRequest request) {
         try {
+            Wishlist w = wishlistService.getWishlistById(wishlistId);
+            validateUserOrAdmin(request, w.getUserId());
             boolean empty = wishlistService.isWishlistEmpty(wishlistId);
             return ResponseEntity.ok(empty);
         } catch (ResourceNotFoundException ex) {
@@ -106,17 +133,16 @@ public class WishlistController {
     }
 
     // ---------------- GET ITEMS ----------------
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/items/{userId}")
-    public ResponseEntity<?> getWishlistItems(@PathVariable int userId) {
+    public ResponseEntity<?> getWishlistItems(@PathVariable int userId, HttpServletRequest request) {
+        validateUserOrAdmin(request, userId);
         try {
             List<Map<String, Object>> items = wishlistService.getWishlistItems(userId);
-
             if (items.isEmpty()) {
                 throw new ResourceNotFoundException("No wishlist items found for userId: " + userId);
             }
-
             return ResponseEntity.ok(items);
-
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }

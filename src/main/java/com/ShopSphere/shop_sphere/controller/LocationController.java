@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.*;
 
 import com.ShopSphere.shop_sphere.dto.LocationDto;
 import com.ShopSphere.shop_sphere.model.Location;
+import com.ShopSphere.shop_sphere.security.AllowedRoles;
+import com.ShopSphere.shop_sphere.security.SecurityUtil;
 import com.ShopSphere.shop_sphere.service.LocationService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/locations")
@@ -37,10 +41,20 @@ public class LocationController {
         return dto;
     }
 
+    // ---------------- Security Helper ----------------
+    private void validateAdmin(HttpServletRequest request) {
+        if (!SecurityUtil.isAdmin(request)) {
+            throw new SecurityException("Unauthorized: Admin access required");
+        }
+    }
+
     // ---------------- API Endpoints ----------------
 
+    @AllowedRoles({"ADMIN"})
     @PostMapping
-    public ResponseEntity<LocationDto> createLocation(@RequestBody LocationDto dto) {
+    public ResponseEntity<LocationDto> createLocation(@RequestBody LocationDto dto, HttpServletRequest request) {
+        validateAdmin(request);
+
         if (dto.getCity() == null || dto.getCity().isBlank()) {
             throw new IllegalArgumentException("City cannot be empty");
         }
@@ -52,6 +66,7 @@ public class LocationController {
         return ResponseEntity.ok(entityToDto(saved));
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/{locationId}")
     public ResponseEntity<LocationDto> getLocationById(@PathVariable int locationId) {
         if (locationId <= 0) {
@@ -62,6 +77,7 @@ public class LocationController {
         return ResponseEntity.ok(entityToDto(loc));
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping
     public ResponseEntity<List<LocationDto>> getAllLocations() {
         List<LocationDto> list = locationService.getAllLocation().stream()
@@ -70,6 +86,7 @@ public class LocationController {
         return ResponseEntity.ok(list);
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/city/{city}")
     public ResponseEntity<List<LocationDto>> getLocationsByCity(@PathVariable String city) {
         if (city == null || city.isBlank()) {
@@ -81,6 +98,7 @@ public class LocationController {
         return ResponseEntity.ok(list);
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/search/{keyword}")
     public ResponseEntity<List<LocationDto>> searchLocations(@PathVariable String keyword) {
         if (keyword == null || keyword.isBlank()) {
@@ -92,6 +110,7 @@ public class LocationController {
         return ResponseEntity.ok(list);
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/exists/{city}")
     public ResponseEntity<Boolean> existsByCity(@PathVariable String city) {
         if (city == null || city.isBlank()) {
@@ -100,6 +119,7 @@ public class LocationController {
         return ResponseEntity.ok(locationService.existsBycity(city));
     }
 
+    @AllowedRoles({"USER", "ADMIN"})
     @GetMapping("/count")
     public ResponseEntity<Integer> countLocations() {
         return ResponseEntity.ok(locationService.countLocations());

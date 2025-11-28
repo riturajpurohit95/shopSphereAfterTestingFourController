@@ -72,4 +72,16 @@ public class WishlistItemDaoImpl implements WishlistItemDao {
     public int deleteItem(int wishlistItemId) {
         return jdbcTemplate.update(DELETE_SQL, wishlistItemId);
     }
+    
+    @Override
+    public int getWishlistIdByItem(int wishlistItemId) {
+        String sql = "SELECT wishlist_id FROM wishlist_items WHERE wishlist_item_id = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, wishlistItemId);
+    }
+    
+    @Override
+    public int getWishlistOwnerId(int wishlistId) {
+        String sql = "SELECT user_id FROM wishlists WHERE wishlist_id = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, wishlistId);
+    }
 }
