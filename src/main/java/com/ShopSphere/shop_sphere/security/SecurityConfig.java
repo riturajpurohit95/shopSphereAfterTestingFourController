@@ -16,6 +16,7 @@ public class SecurityConfig {
         return reg;
     }
  
+<<<<<<< HEAD
     @Bean
     public FilterRegistrationBean<RoleAuthorizationFilter> roleFilter(RoleAuthorizationFilter filter) {
         FilterRegistrationBean<RoleAuthorizationFilter> reg = new FilterRegistrationBean<>();
@@ -24,5 +25,17 @@ public class SecurityConfig {
         reg.setOrder(2);
         return reg;
     }
+=======
+//    @Bean
+//    public FilterRegistrationBean<RoleAuthorizationFilter> roleFilter(RoleAuthorizationFilter filter) {
+//        FilterRegistrationBean<RoleAuthorizationFilter> reg = new FilterRegistrationBean<>();
+//        reg.setFilter(filter);
+//        reg.addUrlPatterns("/api/*");
+//        reg.setOrder(2);
+//        return reg;
+//    }
+    
+    
+>>>>>>> 9a4dbe4 ("JWT WORKING")
 }
  

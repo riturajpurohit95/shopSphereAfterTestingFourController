@@ -58,7 +58,7 @@ public class CartItemController {
 
     // ---------------- APIs ----------------
 
-    @AllowedRoles({"USER", "ADMIN"})
+    @AllowedRoles({"BUYER"})
     @PostMapping
     public CartItemDto addItem(@RequestBody CartItemDto dto, HttpServletRequest request) {
         validateCartOwner(dto.getCartId(), request);
@@ -66,7 +66,7 @@ public class CartItemController {
         return entityToDto(saved);
     }
 
-    @AllowedRoles({"USER", "ADMIN"})
+    @AllowedRoles({"BUYER", "ADMIN"})
     @GetMapping("/cart/{cartId}")
     public List<CartItemDto> getItemsByCartId(@PathVariable int cartId, HttpServletRequest request) {
         validateCartOwner(cartId, request);
