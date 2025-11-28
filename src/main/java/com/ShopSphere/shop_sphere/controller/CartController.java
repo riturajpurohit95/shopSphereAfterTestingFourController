@@ -53,7 +53,7 @@ public class CartController {
 
     // ---------------------- API Endpoints ------------------------
 
-    @AllowedRoles({"USER"})
+    @AllowedRoles({"BUYER"})
     @PostMapping("/{userId}")
     public ResponseEntity<CartDto> createCart(@PathVariable int userId, HttpServletRequest request) {
         validateUserCart(userId, request);
@@ -61,7 +61,7 @@ public class CartController {
         return ResponseEntity.ok(entityToDto(cart));
     }
 
-    @AllowedRoles({"USER", "ADMIN"})
+    @AllowedRoles({"BUYER", "ADMIN"})
     @GetMapping("/user/{userId}")
     public ResponseEntity<CartDto> getCartByUserId(@PathVariable int userId, HttpServletRequest request) {
         validateUserCart(userId, request);
@@ -69,7 +69,7 @@ public class CartController {
         return ResponseEntity.ok(entityToDto(cart));
     }
 
-    @AllowedRoles({"USER", "ADMIN"})
+    @AllowedRoles({"BUYER", "ADMIN"})
     @GetMapping("/{cartId}")
     public ResponseEntity<CartDto> getCartById(@PathVariable int cartId, HttpServletRequest request) {
         validateCartById(cartId, request);
@@ -87,7 +87,7 @@ public class CartController {
         return ResponseEntity.ok(carts);
     }
 
-    @AllowedRoles({"USER", "ADMIN"})
+    @AllowedRoles({"BUYER", "ADMIN"})
     @DeleteMapping("/{cartId}")
     public ResponseEntity<String> deleteCart(@PathVariable int cartId, HttpServletRequest request) {
         validateCartById(cartId, request);
@@ -95,14 +95,14 @@ public class CartController {
         return ResponseEntity.ok("Cart deleted successfully");
     }
 
-    @AllowedRoles({"USER", "ADMIN"})
+    @AllowedRoles({"BUYER", "ADMIN"})
     @GetMapping("/exists/{userId}")
     public ResponseEntity<Boolean> cartExistsForUser(@PathVariable int userId, HttpServletRequest request) {
         validateUserCart(userId, request);
         return ResponseEntity.ok(cartService.cartExistsForUser(userId));
     }
 
-    @AllowedRoles({"USER", "ADMIN"})
+    @AllowedRoles({"BUYER", "ADMIN"})
     @GetMapping("/userCart/{userId}")
     public ResponseEntity<List<CartItemDto>> getCartItems(@PathVariable int userId, HttpServletRequest request) {
         validateUserCart(userId, request);

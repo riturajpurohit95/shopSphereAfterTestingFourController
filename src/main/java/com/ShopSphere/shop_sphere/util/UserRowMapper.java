@@ -16,8 +16,10 @@ public class UserRowMapper implements RowMapper<User> {
         u.setName(rs.getString("name"));
         u.setEmail(rs.getString("email"));
         u.setPassword(rs.getString("password"));
-        u.setPhone(rs.getString("phone"));    // nullable
-        u.setRole(rs.getString("role"));      // ENUM('Admin','Seller','Buyer')
+        u.setPhone(rs.getString("phone")); 
+        // nullable
+        String role = rs.getString("role");
+        u.setRole(role != null ? role.toUpperCase():"BUYER");      // ENUM('Admin','Seller','Buyer')
 
         // location_id may be NULL: read as int and check wasNull
         int locId = rs.getInt("location_id");

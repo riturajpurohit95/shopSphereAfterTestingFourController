@@ -1,75 +1,51 @@
 package com.ShopSphere.shop_sphere.security;
+ 
+import com.ShopSphere.shop_sphere.exception.ForbiddenException;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.method.HandlerMethod;
-
-import com.ShopSphere.shop_sphere.exception.ForbiddenException;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
+ 
 @Component
-public class RoleAuthorizationFilter extends OncePerRequestFilter {
-
+public class RoleAuthorizationFilter implements Filter {
+ 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest req,
-            HttpServletResponse res,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-
-        String path = req.getRequestURI();
-
-        // Allow public endpoints (login, register)
-        if (path.startsWith("/api/auth")) {
-            filterChain.doFilter(req, res);
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+ 
+        HttpServletRequest request = (HttpServletRequest) req;
+ 
+        String role = (String) request.getAttribute("role");
+ 
+        // No JWT? Skip
+        if (role == null) {
+            chain.doFilter(req, res);
             return;
         }
-
-        // Spring sets bestMatchingHandler AFTER handler mapping phase,
-        // but to use it correctly, you must run this filter AFTER mapping.
-        Object handler = req.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
-
-        if (handler instanceof HandlerMethod handlerMethod) {
-
-            Method method = handlerMethod.getMethod();
-            Class<?> controllerClass = handlerMethod.getBeanType();
-
-            AllowedRoles allowed = null;
-
-            // 1. First check method-level annotation
-            if (method.isAnnotationPresent(AllowedRoles.class)) {
-                allowed = method.getAnnotation(AllowedRoles.class);
-            }
-            // 2. Then check class-level annotation
-            else if (controllerClass.isAnnotationPresent(AllowedRoles.class)) {
-                allowed = controllerClass.getAnnotation(AllowedRoles.class);
-            }
-
-            if (allowed != null) {
-                String userRole = (String) req.getAttribute("role");
-
-                boolean permitted = false;
-                for (String role : allowed.value()) {
-                    if (role.equalsIgnoreCase(userRole)) {
-                        permitted = true;
+ 
+        // Check @AllowedRoles annotation on controller method
+        HandlerMethod method = (HandlerMethod) request.getAttribute("handlerMethod");
+ 
+        if (method != null) {
+            AllowedRoles annotation = method.getMethod().getAnnotation(AllowedRoles.class);
+            if (annotation != null) {
+                boolean allowed = false;
+                for (String r : annotation.value()) {
+                    if (r.equalsIgnoreCase(role)) {
+                        allowed = true;
                         break;
                     }
                 }
-
-                if (!permitted) {
-                    throw new ForbiddenException("Role " + userRole + " not allowed for this endpoint");
+                if (!allowed) {
+                    throw new ForbiddenException("Access denied: Role not allowed");
                 }
             }
         }
-
-        filterChain.doFilter(req, res);
+ 
+        chain.doFilter(req, res);
     }
 }
+ 

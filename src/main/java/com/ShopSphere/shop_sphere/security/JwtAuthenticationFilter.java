@@ -1,61 +1,52 @@
 package com.ShopSphere.shop_sphere.security;
-
-import java.io.IOException;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+ 
 import com.ShopSphere.shop_sphere.exception.UnauthorizedException;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
+ 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
+ 
+import org.springframework.stereotype.Component;
+ 
+import java.io.IOException;
+ 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
+public class JwtAuthenticationFilter implements Filter {
+ 
     private final JwtTokenUtil jwtTokenUtil;
-
+ 
     public JwtAuthenticationFilter(JwtTokenUtil jwtTokenUtil) {
         this.jwtTokenUtil = jwtTokenUtil;
     }
-
+ 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
-
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+ 
+        HttpServletRequest request = (HttpServletRequest) req;
+ 
         String path = request.getRequestURI();
-
-        // Allow login/signup without JWT
-        if (path.startsWith("/api/auth")) {
-            filterChain.doFilter(request, response);
+ 
+        // allow login/signup without token
+        if (path.contains("/api/auth")) {
+            chain.doFilter(req, res);
             return;
         }
-
-        String header = request.getHeader("Authorization");
-
-        if (header == null || !header.startsWith("Bearer ")) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid token");
-            return;
+ 
+        String token = request.getHeader("Authorization");
+ 
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Missing or invalid token");
         }
-
-        String token = header.substring(7);
-
-        if (!jwtTokenUtil.isValid(token)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
-            return;
-        }
-
-        // Set userId and role in request attributes
-        request.setAttribute("userId", jwtTokenUtil.getUserId(token));
-        request.setAttribute("role", jwtTokenUtil.getRole(token));
-
-        filterChain.doFilter(request, response);
+ 
+        token = token.substring(7);
+ 
+        Claims claims = jwtTokenUtil.validate(token);
+ 
+        request.setAttribute("userId", claims.get("userId"));
+        request.setAttribute("role", claims.get("role"));
+ 
+        chain.doFilter(req, res);
     }
-
-
 }
+ 
